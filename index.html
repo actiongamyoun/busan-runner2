@@ -24,6 +24,9 @@
 <!-- Material Symbols -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..700,0..1,-25..200&display=block" />
 
+<!-- Supabase JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 :root {
   --navy:        #1B3A5C;
@@ -1801,37 +1804,294 @@ function applyI18n() {
   });
 }
 
+/* ============== SUPABASE CONFIG ============== */
+const SUPABASE_URL = 'https://zuajsnpgubnznnqflqiw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1YWpzbnBndWJuem5ucWZscWl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyMjU4MDcsImV4cCI6MjA5MzgwMTgwN30.o365Otr1TRTfl5iXDAvVB0lVQFdqTuombt5oHMuNZMM';
+const STORAGE_BUCKET = 'course-photos';
+const CURRENT_COURSE_ID = 'mipo-songjeong'; // 코스 식별자
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 /* ============== STATE ============== */
-const STORAGE_KEY = 'busan_runner_v3';
+const STORAGE_KEY = 'busan_runner_v4';
 const COLORS = ['#FF6B4A', '#1B3A5C', '#2E8B57', '#9C6ADE', '#E8A317', '#3B82F6', '#EC4899', '#0F766E'];
+
+// 세션 ID (브라우저별 고유, 본인 글 식별용)
+function getSessionId() {
+  let sid = localStorage.getItem('br_session_id');
+  if (!sid) {
+    sid = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem('br_session_id', sid);
+  }
+  return sid;
+}
+const SESSION_ID = getSessionId();
 
 const state = {
   user: { nick: null, color: COLORS[0] },
-  photos: [],
-  comments: [],
-  likes: 0,
-  liked: false,
+  photos: [],     // Supabase에서 로드
+  comments: [],   // Supabase에서 로드
+  likes: 0,       // 카운트
+  liked: false,   // 본인 좋아요 여부
   views: 0,
   totalRunners: 0,
+  loading: false,
 };
 
-function loadState() {
+function loadUserState() {
+  // 사용자 프로필(닉네임, 색상)만 로컬 저장
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const d = JSON.parse(saved);
-      Object.assign(state, d);
+      if (d.user) state.user = d.user;
     }
-    // 언어 설정도 로드
     const savedLang = localStorage.getItem(STORAGE_KEY + '_lang');
     if (savedLang === 'en' || savedLang === 'ko') currentLang = savedLang;
   } catch (e) { console.warn(e); }
 }
-function saveState() {
+function saveUserState() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: state.user }));
   } catch (e) { console.warn(e); }
 }
+
+/* ============== SUPABASE QUERIES ============== */
+
+// 좋아요 카운트 + 본인 좋아요 여부
+async function fetchLikes() {
+  try {
+    const { count } = await sb
+      .from('course_likes')
+      .select('*', { count: 'exact', head: true })
+      .eq('course_id', CURRENT_COURSE_ID);
+    state.likes = count || 0;
+
+    const { data: mine } = await sb
+      .from('course_likes')
+      .select('id')
+      .eq('course_id', CURRENT_COURSE_ID)
+      .eq('session_id', SESSION_ID)
+      .maybeSingle();
+    state.liked = !!mine;
+  } catch (e) {
+    console.error('fetchLikes', e);
+  }
+}
+
+async function toggleLike() {
+  if (state.liked) {
+    await sb
+      .from('course_likes')
+      .delete()
+      .eq('course_id', CURRENT_COURSE_ID)
+      .eq('session_id', SESSION_ID);
+    state.liked = false;
+    state.likes = Math.max(0, state.likes - 1);
+  } else {
+    const { error } = await sb
+      .from('course_likes')
+      .insert({ course_id: CURRENT_COURSE_ID, session_id: SESSION_ID });
+    if (!error) {
+      state.liked = true;
+      state.likes++;
+      showToast(t('toast.like'), 'favorite');
+    }
+  }
+  renderEngagement();
+}
+
+// 댓글 목록
+async function fetchComments() {
+  try {
+    const { data, error } = await sb
+      .from('course_comments')
+      .select('*')
+      .eq('course_id', CURRENT_COURSE_ID)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (!error && data) {
+      state.comments = data.map(c => ({
+        id: c.id,
+        text: c.content,
+        by: c.user_name,
+        color: c.user_color,
+        time: new Date(c.created_at).getTime(),
+        mine: c.session_id === SESSION_ID,
+      }));
+    }
+  } catch (e) {
+    console.error('fetchComments', e);
+  }
+}
+
+async function postComment(text) {
+  const { data, error } = await sb
+    .from('course_comments')
+    .insert({
+      course_id: CURRENT_COURSE_ID,
+      session_id: SESSION_ID,
+      user_name: state.user.nick,
+      user_color: state.user.color,
+      content: text,
+    })
+    .select()
+    .single();
+  if (error) {
+    console.error('postComment', error);
+    showToast('댓글 등록 실패', 'warning');
+    return false;
+  }
+  // optimistic update
+  state.comments.unshift({
+    id: data.id,
+    text: data.content,
+    by: data.user_name,
+    color: data.user_color,
+    time: new Date(data.created_at).getTime(),
+    mine: true,
+  });
+  return true;
+}
+
+// 사진 목록
+async function fetchPhotos() {
+  try {
+    const { data, error } = await sb
+      .from('course_photos')
+      .select('*')
+      .eq('course_id', CURRENT_COURSE_ID)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (!error && data) {
+      state.photos = data.map(p => ({
+        id: p.id,
+        url: p.public_url,
+        path: p.storage_path,
+        by: p.user_name,
+        color: p.user_color,
+        time: new Date(p.created_at).getTime(),
+        mine: p.session_id === SESSION_ID,
+      }));
+    }
+  } catch (e) {
+    console.error('fetchPhotos', e);
+  }
+}
+
+async function uploadPhoto(file) {
+  // 1. Storage에 업로드
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const filename = `${CURRENT_COURSE_ID}/${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
+  
+  const { error: upErr } = await sb.storage
+    .from(STORAGE_BUCKET)
+    .upload(filename, file, {
+      cacheControl: '3600',
+      upsert: false,
+    });
+  
+  if (upErr) {
+    console.error('upload error', upErr);
+    showToast('사진 업로드 실패', 'warning');
+    return false;
+  }
+
+  // 2. Public URL 받기
+  const { data: urlData } = sb.storage
+    .from(STORAGE_BUCKET)
+    .getPublicUrl(filename);
+  
+  const publicUrl = urlData.publicUrl;
+
+  // 3. DB에 메타데이터 저장
+  const { data, error: dbErr } = await sb
+    .from('course_photos')
+    .insert({
+      course_id: CURRENT_COURSE_ID,
+      session_id: SESSION_ID,
+      user_name: state.user.nick,
+      user_color: state.user.color,
+      storage_path: filename,
+      public_url: publicUrl,
+    })
+    .select()
+    .single();
+  
+  if (dbErr) {
+    console.error('photo db', dbErr);
+    showToast('사진 저장 실패', 'warning');
+    return false;
+  }
+
+  // optimistic update
+  state.photos.unshift({
+    id: data.id,
+    url: publicUrl,
+    path: filename,
+    by: data.user_name,
+    color: data.user_color,
+    time: new Date(data.created_at).getTime(),
+    mine: true,
+  });
+  return true;
+}
+
+// 조회수 (단순 INSERT, count는 따로)
+async function recordView() {
+  try {
+    await sb
+      .from('course_views')
+      .insert({ course_id: CURRENT_COURSE_ID, session_id: SESSION_ID });
+    const { count } = await sb
+      .from('course_views')
+      .select('*', { count: 'exact', head: true })
+      .eq('course_id', CURRENT_COURSE_ID);
+    state.views = count || 0;
+  } catch (e) {
+    console.error('recordView', e);
+  }
+}
+
+async function fetchViewCount() {
+  try {
+    const { count } = await sb
+      .from('course_views')
+      .select('*', { count: 'exact', head: true })
+      .eq('course_id', CURRENT_COURSE_ID);
+    state.views = count || 0;
+  } catch (e) {
+    console.error('fetchViewCount', e);
+  }
+}
+
+// 전체 활동 카운트 (랜딩의 RUNNERS)
+async function fetchTotalRunners() {
+  try {
+    const [likes, comments, photos] = await Promise.all([
+      sb.from('course_likes').select('*', { count: 'exact', head: true }),
+      sb.from('course_comments').select('*', { count: 'exact', head: true }),
+      sb.from('course_photos').select('*', { count: 'exact', head: true }),
+    ]);
+    state.totalRunners = (likes.count || 0) + (comments.count || 0) + (photos.count || 0);
+  } catch (e) {
+    console.error('fetchTotalRunners', e);
+  }
+}
+
+// 한꺼번에 다 fetch
+async function refreshAll() {
+  await Promise.all([
+    fetchLikes(),
+    fetchComments(),
+    fetchPhotos(),
+    fetchViewCount(),
+  ]);
+  renderEngagement();
+  renderGallery();
+  renderComments();
+}
+
 
 /* ============== HELPERS ============== */
 function showToast(msg, icon = 'check_circle') {
@@ -1865,20 +2125,23 @@ function escapeHtml(s) {
 }
 
 /* ============== VIEW SWITCHING ============== */
-function go(view) {
+async function go(view) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + view).classList.add('active');
   window.scrollTo({ top: 0, behavior: 'auto' });
 
   if (view === 'detail') {
     history.pushState({ view }, '', '#course-1');
-    state.views++;
-    saveState();
-    renderEngagement();
-    renderGallery();
-    renderComments();
+    // 뷰 기록 + 데이터 fetch
+    recordView();
+    refreshAll();
   } else {
     history.pushState({ view }, '', '#');
+    // 메인 화면에서 총 활동 카운트 갱신
+    fetchTotalRunners().then(() => {
+      const totalEl = document.getElementById('totalRunners');
+      if (totalEl) totalEl.textContent = state.totalRunners;
+    });
   }
 }
 window.addEventListener('popstate', (e) => {
@@ -1949,36 +2212,39 @@ function renderCourseGrid() {
 
 /* ============== ENGAGEMENT (좋아요, 카운트) ============== */
 function renderEngagement() {
-  document.getElementById('viewCount').textContent = state.views;
-  document.getElementById('photoCount').textContent = state.photos.length;
-  document.getElementById('commentCount').textContent = state.comments.length;
-  document.getElementById('likeCount').textContent = state.likes;
+  const v = document.getElementById('viewCount');
+  const p = document.getElementById('photoCount');
+  const c = document.getElementById('commentCount');
+  const l = document.getElementById('likeCount');
+  if (v) v.textContent = state.views;
+  if (p) p.textContent = state.photos.length;
+  if (c) c.textContent = state.comments.length;
+  if (l) l.textContent = state.likes;
   const likeBtn = document.getElementById('likeBtn');
-  if (state.liked) {
-    likeBtn.classList.add('liked');
-    likeBtn.querySelector('.icon').classList.add('fill');
-  } else {
-    likeBtn.classList.remove('liked');
-    likeBtn.querySelector('.icon').classList.remove('fill');
+  if (likeBtn) {
+    if (state.liked) {
+      likeBtn.classList.add('liked');
+      likeBtn.querySelector('.icon').classList.add('fill');
+    } else {
+      likeBtn.classList.remove('liked');
+      likeBtn.querySelector('.icon').classList.remove('fill');
+    }
   }
-  // 메인 페이지 러너 카운트도
-  const total = (state.likes ? 1 : 0) + state.photos.length + state.comments.length;
-  state.totalRunners = total;
-  const totalEl = document.getElementById('totalRunners');
-  if (totalEl) totalEl.textContent = total;
 }
 function setupLike() {
-  document.getElementById('likeBtn').addEventListener('click', () => {
-    if (state.liked) {
-      state.likes = Math.max(0, state.likes - 1);
-      state.liked = false;
-    } else {
-      state.likes++;
-      state.liked = true;
-      showToast(t('toast.like'), 'favorite');
+  const btn = document.getElementById('likeBtn');
+  let pending = false;
+  btn.addEventListener('click', async () => {
+    if (pending) return;
+    if (!state.user.nick) {
+      ensureUser(() => btn.click());
+      return;
     }
-    saveState();
-    renderEngagement();
+    pending = true;
+    btn.disabled = true;
+    await toggleLike();
+    pending = false;
+    btn.disabled = false;
   });
 }
 
@@ -1999,7 +2265,7 @@ function ensureUser(callback) {
     const nick = nickInput.value.trim();
     if (!nick) return;
     state.user.nick = nick;
-    saveState();
+    saveUserState();
     closeModal('nickModal');
     callback();
   };
@@ -2032,7 +2298,7 @@ function setupPhotoModal() {
   const input = document.getElementById('photoInput');
   const preview = document.getElementById('photoPreview');
   const submit = document.getElementById('photoSubmit');
-  let currentDataUrl = null;
+  let currentFile = null;
 
   input.addEventListener('change', (e) => {
     const file = e.target.files[0];
@@ -2042,31 +2308,36 @@ function setupPhotoModal() {
       input.value = '';
       return;
     }
+    currentFile = file;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      currentDataUrl = ev.target.result;
-      preview.src = currentDataUrl;
+      preview.src = ev.target.result;
       area.classList.add('has-image');
       submit.disabled = false;
     };
     reader.readAsDataURL(file);
   });
 
-  submit.addEventListener('click', () => {
-    if (!currentDataUrl) return;
-    state.photos.unshift({
-      id: uid(),
-      url: currentDataUrl,
-      by: state.user.nick,
-      color: state.user.color,
-      time: Date.now(),
-    });
-    saveState();
-    renderGallery();
-    renderEngagement();
-    closeModal('photoModal');
-    showToast(t('toast.photo.ok'), 'check_circle');
-    currentDataUrl = null;
+  submit.addEventListener('click', async () => {
+    if (!currentFile) return;
+    submit.disabled = true;
+    const originalText = submit.textContent;
+    submit.textContent = '업로드 중...';
+    
+    const success = await uploadPhoto(currentFile);
+    
+    submit.textContent = originalText;
+    
+    if (success) {
+      renderGallery();
+      renderEngagement();
+      closeModal('photoModal');
+      showToast(t('toast.photo.ok'), 'check_circle');
+    } else {
+      submit.disabled = false;
+    }
+    
+    currentFile = null;
     input.value = '';
     preview.src = '';
     area.classList.remove('has-image');
@@ -2125,21 +2396,17 @@ function setupComments() {
   submit.addEventListener('click', () => {
     const text = input.value.trim();
     if (!text) return;
-    ensureUser(() => {
-      state.comments.unshift({
-        id: uid(),
-        text,
-        by: state.user.nick,
-        color: state.user.color,
-        time: Date.now(),
-        mine: true,
-      });
-      saveState();
-      renderComments();
-      renderEngagement();
-      input.value = '';
+    ensureUser(async () => {
       submit.disabled = true;
-      showToast(t('toast.comment.ok'), 'check_circle');
+      const ok = await postComment(text);
+      if (ok) {
+        renderComments();
+        renderEngagement();
+        input.value = '';
+        showToast(t('toast.comment.ok'), 'check_circle');
+      } else {
+        submit.disabled = false;
+      }
     });
   });
 }
@@ -2191,8 +2458,8 @@ function setupLangToggle() {
 }
 
 /* ============== INIT ============== */
-function init() {
-  loadState();
+async function init() {
+  loadUserState();
 
   // 이미지 set
   const heroPhoto = document.getElementById('heroPhoto');
@@ -2243,8 +2510,16 @@ function init() {
     }
   });
 
+  // 초기 데이터 fetch (랜딩의 RUNNERS 카운트)
+  fetchTotalRunners().then(() => {
+    const el = document.getElementById('totalRunners');
+    if (el) el.textContent = state.totalRunners;
+  });
+
   // 초기 URL이 #course-1이면 디테일로
-  if (location.hash === '#course-1') go('detail');
+  if (location.hash === '#course-1') {
+    go('detail');
+  }
 }
 init();
 </script>
