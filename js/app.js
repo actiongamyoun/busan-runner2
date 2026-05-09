@@ -302,8 +302,17 @@ function renderCourseGrid() {
   if (!grid || !state.courses.length) return;
 
   grid.innerHTML = state.courses.map(c => {
-    const ko = c.name?.ko || '';
-    const en = c.name?.en || '';
+    // 위쪽: 영문 슬로건 (브랜드처럼 언어 무관 고정)
+    const titleSlogan = c.name?.en || '';
+    // 아래쪽: 현재 언어에 맞는 라우트
+    // - 한국어 모드: 한글 라우트 (예: 미포 → 청사포 → 송정)
+    // - 영어 모드: 영문 라우트 (없으면 빈칸 — 영문 슬로건이 이미 위에 있어서 OK)
+    let titleRoute;
+    if (currentLang === 'en') {
+      titleRoute = c.subtitle_en || ''; // 영문 모드에서 영문 라우트 없으면 빈칸
+    } else {
+      titleRoute = c.subtitle_ko || c.name?.ko || '';
+    }
     const dist = c.distance_km;
     const dur = c.duration_min;
     const diff = c.difficulty?.[currentLang] || c.difficulty?.ko || '';
@@ -319,7 +328,7 @@ function renderCourseGrid() {
       <div class="course-card ${c.featured ? 'featured' : ''} ${c.ready ? '' : 'locked'}"
            data-ready="${c.ready}" data-course-id="${escapeHtml(c.id)}">
         ${photo
-          ? `<div class="course-card-photo"><img src="${escapeHtml(photo)}" alt="${escapeHtml(en)}" loading="lazy" /></div>`
+          ? `<div class="course-card-photo"><img src="${escapeHtml(photo)}" alt="${escapeHtml(titleSlogan)}" loading="lazy" /></div>`
           : '<div class="course-card-bg"></div>'}
         <div class="course-card-num">${escapeHtml(c.num)}</div>
         ${c.ready
@@ -327,8 +336,8 @@ function renderCourseGrid() {
           : `<div class="course-card-coming"><span class="icon">schedule</span>${t('soon')}</div>`}
         <div class="course-card-content">
           <div class="course-card-tag">${escapeHtml(c.tag || '')}</div>
-          <div class="course-card-title-en">${escapeHtml(en)}</div>
-          <div class="course-card-title-ko">${escapeHtml(ko)}</div>
+          <div class="course-card-title-en">${escapeHtml(titleSlogan)}</div>
+          ${titleRoute ? `<div class="course-card-title-ko">${escapeHtml(titleRoute)}</div>` : ''}
           <div class="course-card-meta">${escapeHtml(meta)}</div>
         </div>
       </div>
