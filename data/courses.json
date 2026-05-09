@@ -1,0 +1,252 @@
+{
+  "version": 1,
+  "courses": [
+    {
+      "id": "mipo-songjeong",
+      "num": "01",
+      "ready": true,
+      "featured": true,
+      "tag": "BLUE LINE PARK",
+      "name": {
+        "en": "MIPO TO SEA",
+        "ko": "미포 → 청사포 → 송정"
+      },
+      "title_en": "FROM MIPO\nTO THE SEA.",
+      "subtitle_ko": "미포 → 청사포 → 송정",
+      "subtitle_en": "Mipo → Cheongsapo → Songjeong",
+      "distance_km": 4.8,
+      "duration_min": 30,
+      "difficulty": {
+        "ko": "초급",
+        "en": "EASY"
+      },
+      "elev_gain_m": 41,
+      "card_image": "images/mipo-songjeong/card.jpg",
+      "hero_image": "images/mipo-songjeong/card.jpg",
+      "gpx": "data/tracks/mipo-songjeong.gpx",
+      "story": {
+        "ko": "2013년까지 동해남부선 열차가 다녔던 자리. 폐선 부지가 산책로가 된 지 8년, 이제 이 길은 부산 러너들의 가장 사랑받는 시그니처 코스가 되었다. 해변열차가 천천히 지나가고, 그 옆을 러너들의 발자국이 채운다.",
+        "en": "Until 2013, the Donghae Nambu Line trains rolled along this coast. Eight years after the tracks became a public path, this is now Busan's most beloved signature course. The slow Beach Train still passes by — and runners' footsteps fill the spaces between."
+      },
+      "story_title": {
+        "ko": "옛 기찻길 위, <em>러너의 길.</em>",
+        "en": "Where the rails ran, <em>now runners do.</em>"
+      },
+      "stops": [
+        {
+          "id": "mipo",
+          "num": "01",
+          "lat": 35.1600,
+          "lon": 129.1708,
+          "name": {
+            "ko": "미포 정거장",
+            "en": "Mipo Station"
+          },
+          "name_secondary": {
+            "ko": "Mipo",
+            "en": "미포"
+          },
+          "desc": {
+            "ko": "출발점. 동백섬과 광안대교가 보이는 자리. 일출 명소.",
+            "en": "Starting point. Dongbaek Island and Gwangan Bridge in view. Famous sunrise spot."
+          }
+        },
+        {
+          "id": "cheongsapo",
+          "num": "02",
+          "lat": 35.1620,
+          "lon": 129.1855,
+          "name": {
+            "ko": "청사포 정거장",
+            "en": "Cheongsapo Station"
+          },
+          "name_secondary": {
+            "ko": "Cheongsapo",
+            "en": "청사포"
+          },
+          "desc": {
+            "ko": "슬램덩크 건널목. 노을이 가장 아름다운 곳. 다릿돌전망대 인근.",
+            "en": "The Slam Dunk crossing. Most beautiful sunset on the coast. Near Daritdol Skywalk."
+          }
+        },
+        {
+          "id": "songjeong",
+          "num": "03",
+          "lat": 35.1805,
+          "lon": 129.2000,
+          "name": {
+            "ko": "송정 정거장",
+            "en": "Songjeong Station"
+          },
+          "name_secondary": {
+            "ko": "Songjeong",
+            "en": "송정"
+          },
+          "desc": {
+            "ko": "도착점. 서핑의 성지 송정해수욕장. 코스 끝에서 바다.",
+            "en": "Endpoint. Korea's surfing mecca, Songjeong Beach. The sea waits at the finish."
+          }
+        }
+      ],
+      "practical": {
+        "time": {
+          "label": { "ko": "추천 시간", "en": "RECOMMENDED TIME" },
+          "value": { "ko": "<em>일출</em> 06:00 — 07:30", "en": "<em>Sunrise</em> 06:00 — 07:30" },
+          "sub": {
+            "ko": "동쪽 해안선이라 일출이 코스 전체를 비춥니다. 일몰도 좋음.",
+            "en": "East-facing coast — the sunrise lights up the entire course. Sunset is also excellent."
+          }
+        },
+        "start": {
+          "label": { "ko": "시작점", "en": "STARTING POINT" },
+          "value": { "ko": "미포항 입구", "en": "Mipo Port Entrance" },
+          "sub": {
+            "ko": "지하철 2호선 중동역 7번 출구 → 도보 약 15분",
+            "en": "Subway Line 2, Jungdong Stn. Exit 7 → 15 min walk"
+          }
+        },
+        "parking": {
+          "label": { "ko": "주차", "en": "PARKING" },
+          "value": { "ko": "미포 공영주차장", "en": "Mipo Public Parking" },
+          "sub": {
+            "ko": "시간당 1,000원 / 24시간 운영 / 주말 만차 주의",
+            "en": "₩1,000/hour · 24 hours · Fills up on weekends"
+          }
+        },
+        "cautions": {
+          "label": { "ko": "주의사항", "en": "CAUTIONS" },
+          "value": {
+            "ko": "여름철 인파 많음 · 야간엔 일부 구간 조명 적음 · 해변열차 노선과 평행, 건널목 주의",
+            "en": "Crowded in summer · Limited lighting at night · Watch for the Beach Train crossings"
+          }
+        },
+        "nearby": {
+          "label": { "ko": "주변 편의시설", "en": "NEARBY" },
+          "value": {
+            "ko": "편의점 다수, 카페 거리, 약국, 송정해수욕장 샤워시설",
+            "en": "Convenience stores, cafés, pharmacy, beach showers at Songjeong"
+          }
+        }
+      },
+      "restrooms": [
+        {
+          "icon": "wc",
+          "name": { "ko": "미포항 공중화장실", "en": "Mipo Public Restroom" },
+          "dist": { "ko": "시작점 · 0 KM", "en": "START · 0 KM" },
+          "hours": { "ko": "24시간 운영", "en": "24 HOURS" },
+          "always": true
+        },
+        {
+          "icon": "wc",
+          "name": { "ko": "청사포 정거장", "en": "Cheongsapo Station" },
+          "dist": { "ko": "2.1 KM · 도보 25분", "en": "2.1 KM · 25 min walk" },
+          "hours": { "ko": "07:00 — 21:00", "en": "07:00 — 21:00" },
+          "always": false
+        },
+        {
+          "icon": "wc",
+          "name": { "ko": "다릿돌전망대 화장실", "en": "Daritdol Skywalk Restroom" },
+          "dist": { "ko": "2.8 KM · 중간 지점", "en": "2.8 KM · midway" },
+          "hours": { "ko": "09:00 — 18:00", "en": "09:00 — 18:00" },
+          "always": false
+        },
+        {
+          "icon": "wc",
+          "name": { "ko": "송정해수욕장 공중화장실", "en": "Songjeong Beach Restroom" },
+          "dist": { "ko": "도착점 · 4.8 KM", "en": "END · 4.8 KM" },
+          "hours": { "ko": "24시간 운영", "en": "24 HOURS" },
+          "always": true
+        },
+        {
+          "icon": "local_cafe",
+          "name": { "ko": "스타벅스 송정해변점", "en": "Starbucks Songjeong Beach" },
+          "dist": { "ko": "도착 직후 · 4.9 KM", "en": "After finish · 4.9 KM" },
+          "hours": { "ko": "07:00 — 22:00", "en": "07:00 — 22:00" },
+          "always": false
+        }
+      ]
+    },
+    {
+      "id": "gwangalli",
+      "num": "02",
+      "ready": false,
+      "tag": "NIGHT VIEW",
+      "name": { "en": "GWANGALLI ARC", "ko": "광안리 해변 아치" },
+      "distance_km": 6.5,
+      "duration_min": null,
+      "difficulty": { "ko": "준비중", "en": "COMING SOON" }
+    },
+    {
+      "id": "igidae",
+      "num": "03",
+      "ready": false,
+      "tag": "CLIFF WALK",
+      "name": { "en": "IGIDAE COAST", "ko": "이기대 해안" },
+      "distance_km": 8.1,
+      "difficulty": { "ko": "준비중", "en": "COMING SOON" }
+    },
+    {
+      "id": "nakdong",
+      "num": "04",
+      "ready": false,
+      "tag": "RIVERSIDE",
+      "name": { "en": "NAKDONG RIVER", "ko": "낙동강 하구" },
+      "distance_km": 12.0,
+      "difficulty": { "ko": "준비중", "en": "COMING SOON" }
+    },
+    {
+      "id": "yeongdo",
+      "num": "05",
+      "ready": false,
+      "tag": "ISLAND",
+      "name": { "en": "YEONGDO LOOP", "ko": "영도 절영해안" },
+      "distance_km": 6.3,
+      "difficulty": { "ko": "준비중", "en": "COMING SOON" }
+    },
+    {
+      "id": "suyeong",
+      "num": "06",
+      "ready": false,
+      "tag": "CHERRY BLOSSOM",
+      "name": { "en": "SUYEONG BLOOM", "ko": "수영강 벚꽃길" },
+      "distance_km": 5.8,
+      "difficulty": { "ko": "준비중", "en": "COMING SOON" }
+    },
+    {
+      "id": "dadaepo",
+      "num": "07",
+      "ready": false,
+      "tag": "SUNSET",
+      "name": { "en": "DADAEPO SUNSET", "ko": "다대포 일몰" },
+      "distance_km": 7.2,
+      "difficulty": { "ko": "준비중", "en": "COMING SOON" }
+    },
+    {
+      "id": "songdo",
+      "num": "08",
+      "ready": false,
+      "tag": "SKYWALK",
+      "name": { "en": "SONGDO RIDGE", "ko": "송도 해안볼레길" },
+      "distance_km": 5.1,
+      "difficulty": { "ko": "준비중", "en": "COMING SOON" }
+    },
+    {
+      "id": "oryukdo",
+      "num": "09",
+      "ready": false,
+      "tag": "CLIFF",
+      "name": { "en": "OEDO TRAIL", "ko": "오륙도 트레일" },
+      "distance_km": 4.0,
+      "difficulty": { "ko": "준비중", "en": "COMING SOON" }
+    },
+    {
+      "id": "busanpark",
+      "num": "10",
+      "ready": false,
+      "tag": "CITY PARK",
+      "name": { "en": "BUSAN PARK", "ko": "부산시민공원" },
+      "distance_km": 5.4,
+      "difficulty": { "ko": "준비중", "en": "COMING SOON" }
+    }
+  ]
+}
