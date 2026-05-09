@@ -1131,6 +1131,129 @@ input, textarea { font-family: inherit; }
 .photo-upload-area.has-image .placeholder { display: none; }
 .photo-upload-area.has-image .photo-preview { display: block; }
 
+/* DELETE BUTTONS */
+.gallery-item {
+  position: relative;
+}
+.gallery-item-delete {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(8px);
+  color: white;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.gallery-item-delete:hover {
+  background: var(--danger);
+}
+.gallery-item-delete .icon {
+  font-size: 16px;
+  color: white;
+}
+.gallery-item.mine .gallery-item-delete {
+  display: flex;
+}
+
+.comment-delete {
+  background: none;
+  border: none;
+  padding: 4px;
+  margin-left: auto;
+  color: var(--mute);
+  cursor: pointer;
+  border-radius: 50%;
+  width: 26px; height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.comment-delete:hover {
+  background: var(--danger-soft, #FCE7E2);
+  color: var(--danger);
+}
+.comment-delete .icon {
+  font-size: 14px;
+}
+
+/* CONFIRM MODAL */
+.confirm-overlay {
+  position: fixed; inset: 0; z-index: 250;
+  background: rgba(15, 35, 64, 0.7);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center; justify-content: center;
+  padding: 24px;
+}
+.confirm-overlay.open { display: flex; animation: fadeIn 0.18s; }
+.confirm-box {
+  background: var(--paper);
+  border-radius: 14px;
+  padding: 28px 24px 22px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  animation: slideUp 0.22s ease-out;
+}
+.confirm-icon {
+  width: 52px; height: 52px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: var(--danger-soft, #FCE7E2);
+  color: var(--danger, #C84A3C);
+  display: grid;
+  place-items: center;
+}
+.confirm-icon .icon {
+  font-size: 26px;
+  color: var(--danger, #C84A3C);
+}
+.confirm-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 19px;
+  color: var(--navy-ink);
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+.confirm-msg {
+  font-size: 13px;
+  color: var(--mute);
+  line-height: 1.55;
+  margin-bottom: 20px;
+}
+.confirm-actions {
+  display: flex; gap: 10px;
+}
+.confirm-btn {
+  flex: 1;
+  padding: 13px;
+  border-radius: 99px;
+  font-weight: 700;
+  font-size: 13px;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+}
+.confirm-cancel {
+  background: var(--cream);
+  color: var(--navy-ink);
+}
+.confirm-cancel:hover { background: var(--line); }
+.confirm-yes {
+  background: var(--danger, #C84A3C);
+  color: white;
+}
+.confirm-yes:hover { background: #A83A2D; }
+
 /* TOAST */
 .toast {
   position: fixed;
@@ -1549,6 +1672,19 @@ input, textarea { font-family: inherit; }
   <img id="lightboxImg" alt="" />
 </div>
 
+<!-- 삭제 확인 모달 -->
+<div class="confirm-overlay" id="confirmModal">
+  <div class="confirm-box">
+    <div class="confirm-icon"><span class="icon">delete</span></div>
+    <div class="confirm-title" id="confirmTitle" data-i18n="confirm.title">정말 삭제할까요?</div>
+    <div class="confirm-msg" id="confirmMsg" data-i18n="confirm.msg">이 작업은 되돌릴 수 없어요.</div>
+    <div class="confirm-actions">
+      <button class="confirm-btn confirm-cancel" id="confirmCancelBtn" data-i18n="confirm.cancel">취소</button>
+      <button class="confirm-btn confirm-yes" id="confirmYesBtn" data-i18n="confirm.yes">삭제</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast">
   <span class="icon" id="toastIcon">check_circle</span>
   <span id="toastMsg">완료</span>
@@ -1671,6 +1807,14 @@ const I18N = {
     'time.min': '분 전',
     'time.hour': '시간 전',
     'time.day': '일 전',
+    'confirm.title': '정말 삭제할까요?',
+    'confirm.msg': '이 작업은 되돌릴 수 없어요.',
+    'confirm.cancel': '취소',
+    'confirm.yes': '삭제',
+    'confirm.photo.msg': '이 사진을 삭제합니다.',
+    'confirm.comment.msg': '이 댓글을 삭제합니다.',
+    'toast.deleted': '삭제 완료',
+    'toast.delete.fail': '삭제 실패',
   },
   en: {
     'brand.ko': 'Busan Runner',
@@ -1777,6 +1921,14 @@ const I18N = {
     'time.min': 'm ago',
     'time.hour': 'h ago',
     'time.day': 'd ago',
+    'confirm.title': 'Delete this?',
+    'confirm.msg': "This can't be undone.",
+    'confirm.cancel': 'Cancel',
+    'confirm.yes': 'Delete',
+    'confirm.photo.msg': 'This photo will be removed.',
+    'confirm.comment.msg': 'This comment will be removed.',
+    'toast.deleted': 'Deleted',
+    'toast.delete.fail': 'Delete failed',
   },
 };
 
@@ -1968,6 +2120,7 @@ async function fetchPhotos() {
         id: p.id,
         url: p.public_url,
         path: p.storage_path,
+        session_id: p.session_id,
         by: p.user_name,
         color: p.user_color,
         time: new Date(p.created_at).getTime(),
@@ -2090,6 +2243,111 @@ async function refreshAll() {
   renderEngagement();
   renderGallery();
   renderComments();
+}
+
+/* ============== DELETE FUNCTIONS ============== */
+
+async function deletePhoto(photo) {
+  // 본인 것만 삭제 가능 (FE + BE 검증)
+  if (photo.session_id && photo.session_id !== SESSION_ID) {
+    showToast('본인 사진만 삭제 가능', 'warning');
+    return false;
+  }
+
+  try {
+    // 1. Storage에서 파일 삭제
+    if (photo.path) {
+      const { error: storageErr } = await sb.storage
+        .from(STORAGE_BUCKET)
+        .remove([photo.path]);
+      if (storageErr) {
+        console.warn('Storage 삭제 실패 (DB는 진행):', storageErr);
+        // Storage 실패해도 DB는 지움 (고아 파일은 수동 청소 가능)
+      }
+    }
+
+    // 2. DB에서 메타데이터 삭제
+    const { error: dbErr } = await sb
+      .from('course_photos')
+      .delete()
+      .eq('id', photo.id)
+      .eq('session_id', SESSION_ID); // 한 번 더 본인 검증
+
+    if (dbErr) {
+      console.error('사진 DB 삭제 실패:', dbErr);
+      showToast(t('toast.delete.fail'), 'warning');
+      return false;
+    }
+
+    // 3. 로컬 state에서 제거
+    state.photos = state.photos.filter(p => p.id !== photo.id);
+    return true;
+  } catch (e) {
+    console.error('deletePhoto error:', e);
+    showToast(t('toast.delete.fail'), 'warning');
+    return false;
+  }
+}
+
+async function deleteComment(commentId) {
+  try {
+    const { error } = await sb
+      .from('course_comments')
+      .delete()
+      .eq('id', commentId)
+      .eq('session_id', SESSION_ID); // 본인 검증
+
+    if (error) {
+      console.error('댓글 삭제 실패:', error);
+      showToast(t('toast.delete.fail'), 'warning');
+      return false;
+    }
+
+    state.comments = state.comments.filter(c => c.id !== commentId);
+    return true;
+  } catch (e) {
+    console.error('deleteComment error:', e);
+    showToast(t('toast.delete.fail'), 'warning');
+    return false;
+  }
+}
+
+/* ============== CONFIRM MODAL ============== */
+
+function showConfirm(messageKey, onConfirm) {
+  const overlay = document.getElementById('confirmModal');
+  const msg = document.getElementById('confirmMsg');
+  const yesBtn = document.getElementById('confirmYesBtn');
+  const cancelBtn = document.getElementById('confirmCancelBtn');
+
+  msg.textContent = t(messageKey || 'confirm.msg');
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // 이전 핸들러 제거 (메모리 누수 방지)
+  const newYes = yesBtn.cloneNode(true);
+  yesBtn.parentNode.replaceChild(newYes, yesBtn);
+  const newCancel = cancelBtn.cloneNode(true);
+  cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+  newYes.textContent = t('confirm.yes');
+  newCancel.textContent = t('confirm.cancel');
+
+  const closeIt = () => {
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  newYes.addEventListener('click', async () => {
+    closeIt();
+    await onConfirm();
+  });
+  newCancel.addEventListener('click', closeIt);
+
+  // 배경 클릭으로 닫기
+  overlay.onclick = (e) => {
+    if (e.target === overlay) closeIt();
+  };
 }
 
 
@@ -2360,15 +2618,38 @@ function renderGallery() {
   c.innerHTML = `
     <div class="gallery-grid">
       ${state.photos.map(p => `
-        <div class="gallery-item" data-url="${escapeHtml(p.url)}">
+        <div class="gallery-item ${p.mine ? 'mine' : ''}" data-url="${escapeHtml(p.url)}" data-photo-id="${p.id}">
           <img src="${escapeHtml(p.url)}" alt="" loading="lazy" />
           <div class="gallery-item-by">@${escapeHtml(p.by)}</div>
+          ${p.mine ? `<button class="gallery-item-delete" data-photo-id="${p.id}" aria-label="Delete photo"><span class="icon">delete</span></button>` : ''}
         </div>
       `).join('')}
     </div>
   `;
+  // 사진 클릭 → 라이트박스
   c.querySelectorAll('.gallery-item').forEach(item => {
-    item.addEventListener('click', () => openLightbox(item.dataset.url));
+    item.addEventListener('click', (e) => {
+      // 삭제 버튼 클릭은 라이트박스 안 열리게
+      if (e.target.closest('.gallery-item-delete')) return;
+      openLightbox(item.dataset.url);
+    });
+  });
+  // 삭제 버튼 핸들러
+  c.querySelectorAll('.gallery-item-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = parseInt(btn.dataset.photoId, 10);
+      const photo = state.photos.find(p => p.id === id);
+      if (!photo) return;
+      showConfirm('confirm.photo.msg', async () => {
+        const ok = await deletePhoto(photo);
+        if (ok) {
+          renderGallery();
+          renderEngagement();
+          showToast(t('toast.deleted'), 'check_circle');
+        }
+      });
+    });
   });
 }
 
@@ -2418,7 +2699,7 @@ function renderComments() {
     return;
   }
   list.innerHTML = state.comments.map(c => `
-    <div class="comment">
+    <div class="comment" data-comment-id="${c.id}">
       <div class="comment-avatar" style="background:${escapeHtml(c.color)}">
         ${escapeHtml((c.by[0] || '?').toUpperCase())}
       </div>
@@ -2427,11 +2708,26 @@ function renderComments() {
           <span class="comment-name">${escapeHtml(c.by)}</span>
           ${c.mine ? '<span class="comment-mine">MINE</span>' : ''}
           <span class="comment-time">${timeAgo(c.time)}</span>
+          ${c.mine ? `<button class="comment-delete" data-comment-id="${c.id}" aria-label="Delete comment"><span class="icon">delete</span></button>` : ''}
         </div>
         <div class="comment-text">${escapeHtml(c.text)}</div>
       </div>
     </div>
   `).join('');
+  // 댓글 삭제 버튼 핸들러
+  list.querySelectorAll('.comment-delete').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = parseInt(btn.dataset.commentId, 10);
+      showConfirm('confirm.comment.msg', async () => {
+        const ok = await deleteComment(id);
+        if (ok) {
+          renderComments();
+          renderEngagement();
+          showToast(t('toast.deleted'), 'check_circle');
+        }
+      });
+    });
+  });
 }
 
 /* ============== SCROLL EFFECT ============== */
@@ -2506,6 +2802,11 @@ async function init() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       document.querySelectorAll('.modal-overlay.open').forEach(m => closeModal(m.id));
+      const conf = document.getElementById('confirmModal');
+      if (conf && conf.classList.contains('open')) {
+        conf.classList.remove('open');
+        document.body.style.overflow = '';
+      }
       closeLightbox();
     }
   });
