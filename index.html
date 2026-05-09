@@ -1658,7 +1658,7 @@ input, textarea { font-family: inherit; }
           <div class="placeholder">
             <span class="icon">add_photo_alternate</span>
             <div class="t" data-i18n="modal.photo.t">사진을 선택하세요</div>
-            <div class="s" data-i18n="modal.photo.s">JPG, PNG · 최대 5MB</div>
+            <div class="s" data-i18n="modal.photo.s">자동 압축됩니다 · JPG, PNG, HEIC</div>
           </div>
         </div>
       </div>
@@ -1793,14 +1793,14 @@ const I18N = {
     'modal.photo.title': '사진 올리기',
     'modal.photo.label': '사진 · PHOTO',
     'modal.photo.t': '사진을 선택하세요',
-    'modal.photo.s': 'JPG, PNG · 최대 5MB',
+    'modal.photo.s': '자동 압축됩니다 · JPG, PNG, HEIC',
     'modal.photo.submit': '등록',
     'notif.none': '새 알림 없음',
     'toast.share': '링크 복사됨',
     'toast.meet': '모임 기능 준비 중',
     'toast.photo.ok': '사진 등록 완료',
     'toast.comment.ok': '후기 등록 완료',
-    'toast.photo.size': '5MB 이하 사진만 가능',
+    'toast.photo.size': '사진이 너무 커요 (20MB 이하)',
     'toast.coming': '다른 코스도 곧 공개됩니다',
     'toast.like': '좋아요!',
     'time.now': '방금',
@@ -1907,14 +1907,14 @@ const I18N = {
     'modal.photo.title': 'Add a photo',
     'modal.photo.label': 'PHOTO',
     'modal.photo.t': 'Choose a photo',
-    'modal.photo.s': 'JPG, PNG · Max 5MB',
+    'modal.photo.s': 'Auto-compressed · JPG, PNG, HEIC',
     'modal.photo.submit': 'Post',
     'notif.none': 'No new notifications',
     'toast.share': 'Link copied',
     'toast.meet': 'Meet-ups coming soon',
     'toast.photo.ok': 'Photo posted',
     'toast.comment.ok': 'Review posted',
-    'toast.photo.size': 'Max 5MB photos only',
+    'toast.photo.size': 'Photo too large (max 20MB)',
     'toast.coming': 'More courses coming soon',
     'toast.like': 'Liked!',
     'time.now': 'just now',
@@ -2245,6 +2245,143 @@ async function refreshAll() {
   renderComments();
 }
 
+/* ============== IMAGE COMPRESSION ============== */
+
+// EXIF Orientation 읽기 (폰 사진 회전 정보)
+async function getExifOrientation(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const view = new DataView(e.target.result);
+      // JPEG가 아니면 1 (정상)
+      if (view.getUint16(0, false) !== 0xFFD8) {
+        resolve(1);
+        return;
+      }
+      const length = view.byteLength;
+      let offset = 2;
+      while (offset < length) {
+        if (view.getUint16(offset + 2, false) <= 8) {
+          resolve(1);
+          return;
+        }
+        const marker = view.getUint16(offset, false);
+        offset += 2;
+        if (marker === 0xFFE1) {
+          // EXIF 헤더 발견
+          if (view.getUint32(offset += 2, false) !== 0x45786966) {
+            resolve(1);
+            return;
+          }
+          const little = view.getUint16(offset += 6, false) === 0x4949;
+          offset += view.getUint32(offset + 4, little);
+          const tags = view.getUint16(offset, little);
+          offset += 2;
+          for (let i = 0; i < tags; i++) {
+            if (view.getUint16(offset + i * 12, little) === 0x0112) {
+              resolve(view.getUint16(offset + i * 12 + 8, little));
+              return;
+            }
+          }
+        } else if ((marker & 0xFF00) !== 0xFF00) {
+          break;
+        } else {
+          offset += view.getUint16(offset, false);
+        }
+      }
+      resolve(1);
+    };
+    reader.onerror = () => resolve(1);
+    reader.readAsArrayBuffer(file.slice(0, 64 * 1024)); // 처음 64KB만 읽으면 충분
+  });
+}
+
+// 이미지를 1200px 이하로 압축 + 회전 보정
+async function compressImage(file, maxSide = 1200, quality = 0.85) {
+  // 작은 이미지 / 비-이미지면 그대로
+  if (!file.type.startsWith('image/')) return file;
+  // GIF는 압축하면 애니메이션 손실 → 그대로 통과
+  if (file.type === 'image/gif') return file;
+
+  try {
+    const orientation = await getExifOrientation(file);
+
+    // 이미지 로드
+    const img = await new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const i = new Image();
+      i.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve(i);
+      };
+      i.onerror = (e) => {
+        URL.revokeObjectURL(url);
+        reject(e);
+      };
+      i.src = url;
+    });
+
+    let { width, height } = img;
+
+    // EXIF 회전이 90/270도면 가로세로 바뀜
+    const rotated = orientation >= 5 && orientation <= 8;
+    let drawWidth = width;
+    let drawHeight = height;
+
+    // 리사이즈 비율 계산
+    const longSide = Math.max(width, height);
+    if (longSide > maxSide) {
+      const ratio = maxSide / longSide;
+      drawWidth = Math.round(width * ratio);
+      drawHeight = Math.round(height * ratio);
+    }
+
+    // Canvas 생성 (회전 고려)
+    const canvas = document.createElement('canvas');
+    if (rotated) {
+      canvas.width = drawHeight;
+      canvas.height = drawWidth;
+    } else {
+      canvas.width = drawWidth;
+      canvas.height = drawHeight;
+    }
+
+    const ctx = canvas.getContext('2d');
+    // 회전 적용
+    switch (orientation) {
+      case 2: ctx.transform(-1, 0, 0, 1, drawWidth, 0); break;        // 좌우반전
+      case 3: ctx.transform(-1, 0, 0, -1, drawWidth, drawHeight); break; // 180도
+      case 4: ctx.transform(1, 0, 0, -1, 0, drawHeight); break;       // 상하반전
+      case 5: ctx.transform(0, 1, 1, 0, 0, 0); break;                  // 시계 90 + 좌우반전
+      case 6: ctx.transform(0, 1, -1, 0, drawHeight, 0); break;        // 시계 90도
+      case 7: ctx.transform(0, -1, -1, 0, drawHeight, drawWidth); break; // 반시계 90 + 좌우반전
+      case 8: ctx.transform(0, -1, 1, 0, 0, drawWidth); break;         // 반시계 90도
+      default: break;
+    }
+
+    ctx.drawImage(img, 0, 0, drawWidth, drawHeight);
+
+    // 압축된 Blob 받기
+    const blob = await new Promise((resolve) => {
+      canvas.toBlob((b) => resolve(b), 'image/jpeg', quality);
+    });
+
+    if (!blob) return file; // 실패 시 원본 사용
+
+    // 원본보다 큰 이상한 경우 (이미 작은 사진), 원본 그대로
+    if (blob.size > file.size && file.type === 'image/jpeg') {
+      return file;
+    }
+
+    // File 객체로 변환 (이름 보존, .jpg로 강제)
+    const newName = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+    return new File([blob], newName, { type: 'image/jpeg' });
+  } catch (e) {
+    console.warn('압축 실패, 원본 사용:', e);
+    return file;
+  }
+}
+
 /* ============== DELETE FUNCTIONS ============== */
 
 async function deletePhoto(photo) {
@@ -2558,22 +2695,42 @@ function setupPhotoModal() {
   const submit = document.getElementById('photoSubmit');
   let currentFile = null;
 
-  input.addEventListener('change', (e) => {
+  // 사진 크기 제한 (압축 전 원본 기준): 20MB까지 허용 (압축 후 작아질 거니까 관대하게)
+  const MAX_INPUT_SIZE = 20 * 1024 * 1024;
+
+  input.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_INPUT_SIZE) {
       showToast(t('toast.photo.size'), 'warning');
       input.value = '';
       return;
     }
-    currentFile = file;
+    
+    submit.disabled = true;
+    const originalText = submit.textContent;
+    submit.textContent = '...';
+    
+    // 미리보기는 빠르게 (원본으로)
     const reader = new FileReader();
     reader.onload = (ev) => {
       preview.src = ev.target.result;
       area.classList.add('has-image');
-      submit.disabled = false;
     };
     reader.readAsDataURL(file);
+    
+    // 백그라운드에서 압축
+    try {
+      const compressed = await compressImage(file, 1200, 0.85);
+      currentFile = compressed;
+      console.log(`📷 압축: ${(file.size/1024).toFixed(0)}KB → ${(compressed.size/1024).toFixed(0)}KB (${Math.round((1 - compressed.size/file.size) * 100)}% 절감)`);
+    } catch (err) {
+      console.warn('압축 실패, 원본 사용', err);
+      currentFile = file;
+    }
+    
+    submit.textContent = originalText;
+    submit.disabled = false;
   });
 
   submit.addEventListener('click', async () => {
