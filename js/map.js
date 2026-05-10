@@ -160,6 +160,36 @@ window.BusanRunnerMap = (function() {
         });
       }
 
+      // 명소 마커 (★ 별표 - 코스 색상)
+      if (course.spots && course.spots.length) {
+        course.spots.forEach((spot) => {
+          const spotIcon = L.divIcon({
+            className: 'br-marker br-marker-spot',
+            html: `<div class="br-pin br-pin-spot" style="color:${courseColor}">★</div>`,
+            iconSize: [28, 28], iconAnchor: [14, 14],
+          });
+          const m = L.marker([spot.lat, spot.lon], { icon: spotIcon }).addTo(map);
+          
+          const spotName = (spot.name && spot.name[lang]) || spot.name?.ko || '';
+          const spotSecond = (spot.name_secondary && spot.name_secondary[lang]) || '';
+          const spotDesc = (spot.desc && spot.desc[lang]) || spot.desc?.ko || '';
+          
+          const popupHtml = `
+            <div class="br-popup">
+              <div class="br-popup-spot-tag" style="color:${courseColor}">★ ${lang === 'en' ? 'POINT OF INTEREST' : '명소'}</div>
+              <div class="br-popup-name">${escapeHtml(spotName)}
+                ${spotSecond ? `<em>${escapeHtml(spotSecond)}</em>` : ''}
+              </div>
+              <div class="br-popup-desc">${escapeHtml(spotDesc)}</div>
+            </div>
+          `;
+          m.bindPopup(popupHtml, {
+            offset: [0, -8], closeButton: true,
+            className: 'br-popup-wrapper', maxWidth: 260,
+          });
+        });
+      }
+
       map.fitBounds(latlngs, { padding: [40, 40] });
 
       updateMapStats(stats, lang);
