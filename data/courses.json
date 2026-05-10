@@ -26,6 +26,28 @@
         "en": "EASY"
       },
       "elev_gain_m": 41,
+      "variants": [
+        {
+          "id": "default",
+          "name": { "ko": "기본", "en": "STANDARD" },
+          "subtitle": { "ko": "편도 코스", "en": "One-way" },
+          "distance_km": 4.8,
+          "duration_min": 30,
+          "elev_gain_m": 41,
+          "difficulty": { "ko": "초급", "en": "EASY" },
+          "gpx": "data/tracks/mipo-songjeong.gpx"
+        },
+        {
+          "id": "long",
+          "name": { "ko": "롱런", "en": "LONG RUN" },
+          "subtitle": { "ko": "왕복 10km", "en": "10km round trip" },
+          "distance_km": 10.0,
+          "duration_min": 65,
+          "elev_gain_m": 93,
+          "difficulty": { "ko": "중급", "en": "MEDIUM" },
+          "gpx": "data/tracks/mipo-songjeong-long.gpx"
+        }
+      ],
       "card_images": [
         "images/mipo-songjeong/card1.jpg",
         "images/mipo-songjeong/card2.jpg",
