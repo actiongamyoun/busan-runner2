@@ -117,75 +117,52 @@ function setupLogin() {
 }
 
 /* ============== IMAGE COMPRESSION ============== */
-async function getExifOrientation(file) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const view = new DataView(e.target.result);
-      if (view.getUint16(0, false) !== 0xFFD8) { resolve(1); return; }
-      const length = view.byteLength;
-      let offset = 2;
-      while (offset < length) {
-        if (view.getUint16(offset + 2, false) <= 8) { resolve(1); return; }
-        const marker = view.getUint16(offset, false); offset += 2;
-        if (marker === 0xFFE1) {
-          if (view.getUint32(offset += 2, false) !== 0x45786966) { resolve(1); return; }
-          const little = view.getUint16(offset += 6, false) === 0x4949;
-          offset += view.getUint32(offset + 4, little);
-          const tags = view.getUint16(offset, little); offset += 2;
-          for (let i = 0; i < tags; i++) {
-            if (view.getUint16(offset + i * 12, little) === 0x0112) {
-              resolve(view.getUint16(offset + i * 12 + 8, little)); return;
-            }
-          }
-        } else if ((marker & 0xFF00) !== 0xFF00) break;
-        else offset += view.getUint16(offset, false);
-      }
-      resolve(1);
-    };
-    reader.onerror = () => resolve(1);
-    reader.readAsArrayBuffer(file.slice(0, 64 * 1024));
-  });
-}
-
+/* ============== IMAGE COMPRESSION (v8 - createImageBitmap 기반) ============== */
+// createImageBitmap이 EXIF orientation을 자동 처리 → 회전 문제 해결
+// iOS Safari 14+ / Chrome 50+ / Firefox 90+ 지원
 async function compressImage(file, maxSide = 1200, quality = 0.85) {
   if (!file.type.startsWith('image/')) return file;
   if (file.type === 'image/gif') return file;
+
   try {
-    const orientation = await getExifOrientation(file);
-    const img = await new Promise((resolve, reject) => {
-      const url = URL.createObjectURL(file);
-      const i = new Image();
-      i.onload = () => { URL.revokeObjectURL(url); resolve(i); };
-      i.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
-      i.src = url;
-    });
-    let { width, height } = img;
-    const rotated = orientation >= 5 && orientation <= 8;
-    let drawWidth = width, drawHeight = height;
+    let bitmap;
+    
+    // createImageBitmap with imageOrientation: EXIF 자동 적용
+    if (typeof createImageBitmap !== 'undefined') {
+      try {
+        bitmap = await createImageBitmap(file, {
+          imageOrientation: 'from-image'
+        });
+      } catch (e) {
+        // 옵션 미지원 → 옵션 없이 시도
+        console.warn('imageOrientation 미지원, 폴백:', e);
+        bitmap = await createImageBitmap(file);
+      }
+    } else {
+      // 매우 오래된 브라우저: 원본 그대로 (회전 안 됨)
+      console.warn('createImageBitmap 미지원');
+      return file;
+    }
+
+    let { width, height } = bitmap;
     const longSide = Math.max(width, height);
     if (longSide > maxSide) {
       const ratio = maxSide / longSide;
-      drawWidth = Math.round(width * ratio);
-      drawHeight = Math.round(height * ratio);
+      width = Math.round(width * ratio);
+      height = Math.round(height * ratio);
     }
+
     const canvas = document.createElement('canvas');
-    if (rotated) { canvas.width = drawHeight; canvas.height = drawWidth; }
-    else { canvas.width = drawWidth; canvas.height = drawHeight; }
+    canvas.width = width;
+    canvas.height = height;
     const ctx = canvas.getContext('2d');
-    switch (orientation) {
-      case 2: ctx.transform(-1, 0, 0, 1, drawWidth, 0); break;
-      case 3: ctx.transform(-1, 0, 0, -1, drawWidth, drawHeight); break;
-      case 4: ctx.transform(1, 0, 0, -1, 0, drawHeight); break;
-      case 5: ctx.transform(0, 1, 1, 0, 0, 0); break;
-      case 6: ctx.transform(0, 1, -1, 0, drawHeight, 0); break;
-      case 7: ctx.transform(0, -1, -1, 0, drawHeight, drawWidth); break;
-      case 8: ctx.transform(0, -1, 1, 0, 0, drawWidth); break;
-    }
-    ctx.drawImage(img, 0, 0, drawWidth, drawHeight);
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    if (bitmap.close) bitmap.close();
+
     const blob = await new Promise(r => canvas.toBlob(b => r(b), 'image/jpeg', quality));
     if (!blob) return file;
     if (blob.size > file.size && file.type === 'image/jpeg') return file;
+
     return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
   } catch (e) {
     console.warn('압축 실패:', e);
