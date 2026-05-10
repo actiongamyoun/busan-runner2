@@ -83,8 +83,8 @@
         {
           "id": "cheongsapo",
           "num": "02",
-          "lat": 35.1620,
-          "lon": 129.1855,
+          "lat": 35.1599,
+          "lon": 129.1869,
           "name": { "ko": "청사포 정거장", "en": "Cheongsapo Station" },
           "name_secondary": { "ko": "Cheongsapo", "en": "청사포" },
           "desc": {
@@ -95,8 +95,8 @@
         {
           "id": "songjeong",
           "num": "03",
-          "lat": 35.1805,
-          "lon": 129.2000,
+          "lat": 35.18051,
+          "lon": 129.20003,
           "name": { "ko": "송정 정거장", "en": "Songjeong Station" },
           "name_secondary": { "ko": "Songjeong", "en": "송정" },
           "desc": {
@@ -105,6 +105,7 @@
           }
         }
       ],
+      "spots": [],
       "practical": {
         "time": {
           "label": { "ko": "추천 시간", "en": "RECOMMENDED TIME" },
@@ -196,11 +197,11 @@
       },
       "name": {
         "en": "DONGBAEK LOOP",
-        "ko": "동백섬 루프"
+        "ko": "마린시티 → 동백섬 한 바퀴"
       },
       "title_en": "AROUND\nDONGBAEK.",
-      "subtitle_ko": "해운대 → 동백섬 한 바퀴",
-      "subtitle_en": "Haeundae → Dongbaek Island Loop",
+      "subtitle_ko": "마린시티 → 동백섬 한 바퀴",
+      "subtitle_en": "Marine City → Dongbaek Island Loop",
       "tagline": {
         "ko": "동백섬 한 바퀴 · 광안대교 뷰 명소",
         "en": "Around Dongbaek Island · Bridge view spot"
@@ -218,8 +219,8 @@
       "hero_image": "images/dongbaek/hero.jpg",
       "gpx": "data/tracks/dongbaek.gpx",
       "story": {
-        "ko": "해운대 백사장에서 시작해 동백섬을 한 바퀴 도는 짧지만 풍성한 코스. 누리마루 APEC하우스, 인어상, 해안 절벽길까지 — 부산의 정수가 3km 안에 모두 담겨 있다. 광안대교 뷰는 덤.",
-        "en": "Starting from Haeundae Beach and looping around Dongbaek Island — short but full of essence. Nuri Maru APEC House, the mermaid statue, coastal cliff paths — the heart of Busan in 3km. Gwangan Bridge view is a bonus."
+        "ko": "마린시티 카페거리에서 출발해 동백섬을 한 바퀴 도는 짧지만 풍성한 코스. 입구의 옛 동백섬 선착장, 등대광장의 바다 전망, 황옥공주 인어상까지 — 부산의 정수가 3km 안에 모두 담겨 있다. 광안대교 뷰는 덤.",
+        "en": "Starting from Marine City café district, looping around Dongbaek Island — short but full of essence. The old island pier, lighthouse plaza, the legendary mermaid statue — the heart of Busan in 3km. Gwangan Bridge view is a bonus."
       },
       "story_title": {
         "ko": "한 바퀴, <em>부산의 모든 것.</em>",
@@ -227,39 +228,53 @@
       },
       "stops": [
         {
-          "id": "haeundae-entry",
+          "id": "marine-city",
           "num": "01",
-          "lat": 35.1593,
-          "lon": 129.1698,
-          "name": { "ko": "해운대 입구", "en": "Haeundae Entry" },
-          "name_secondary": { "ko": "Haeundae", "en": "해운대" },
+          "lat": 35.15597,
+          "lon": 129.14372,
+          "name": { "ko": "마린시티 출발", "en": "Marine City Start" },
+          "name_secondary": { "ko": "Marine City", "en": "마린시티" },
           "desc": {
-            "ko": "출발점. 해운대 백사장 서쪽 끝. 동백섬으로 진입하는 자리.",
-            "en": "Starting point. The west end of Haeundae Beach. Where Dongbaek Island begins."
+            "ko": "출발/도착점. 마린시티 카페거리. 프레제 카페 부근에서 시작.",
+            "en": "Start and finish. Marine City café district. Near Presse Bakery Café."
           }
         },
         {
-          "id": "nurimaru",
+          "id": "dongbaek-entry",
           "num": "02",
-          "lat": 35.1530,
-          "lon": 129.1500,
-          "name": { "ko": "누리마루 APEC하우스", "en": "Nuri Maru APEC House" },
-          "name_secondary": { "ko": "Nurimaru", "en": "누리마루" },
+          "lat": 35.15786,
+          "lon": 129.15186,
+          "name": { "ko": "동백섬 입구", "en": "Dongbaek Entry" },
+          "name_secondary": { "ko": "Dongbaek", "en": "동백섬" },
           "desc": {
-            "ko": "2005년 APEC 정상회의장. 광안대교가 가장 잘 보이는 포인트.",
-            "en": "2005 APEC Summit venue. Best viewpoint for Gwangan Bridge."
+            "ko": "옛 동백섬 선착장 부근. 더베이101 인근에서 동백섬 산책로로 진입.",
+            "en": "Near the old Dongbaek pier. Enter the island trail by The Bay 101."
           }
         },
+        {
+          "id": "lighthouse",
+          "num": "03",
+          "lat": 35.15235,
+          "lon": 129.15250,
+          "name": { "ko": "동백섬 등대", "en": "Dongbaek Lighthouse" },
+          "name_secondary": { "ko": "Lighthouse", "en": "등대광장" },
+          "desc": {
+            "ko": "등대광장. 해운대 석각, 누리마루 APEC하우스 인근. 광안대교가 가장 잘 보이는 포인트.",
+            "en": "Lighthouse plaza. Near Haeundae Stone Inscription and Nuri Maru APEC House. Best view of Gwangan Bridge."
+          }
+        }
+      ],
+      "spots": [
         {
           "id": "mermaid",
-          "num": "03",
-          "lat": 35.1556,
-          "lon": 129.1490,
-          "name": { "ko": "인어상", "en": "Mermaid Statue" },
-          "name_secondary": { "ko": "Mermaid", "en": "인어상" },
+          "icon": "auto_awesome",
+          "lat": 35.15513,
+          "lon": 129.15368,
+          "name": { "ko": "황옥공주 인어상", "en": "Princess Hwangok Mermaid" },
+          "name_secondary": { "ko": "Mermaid Statue", "en": "인어상" },
           "desc": {
-            "ko": "황옥공주 전설의 인어상. 해안 절벽길의 핵심 포토 스팟.",
-            "en": "Princess Hwangok mermaid legend. Iconic photo spot on the cliff path."
+            "ko": "동백섬 동쪽 끝, 출렁다리 옆. 황옥공주 전설의 인어 동상. 동백섬의 시그니처 포토 스팟.",
+            "en": "East end of Dongbaek, next to the suspension bridge. Princess Hwangok legend. The island's iconic photo spot."
           }
         }
       ],
@@ -274,18 +289,18 @@
         },
         "start": {
           "label": { "ko": "시작점", "en": "STARTING POINT" },
-          "value": { "ko": "해운대 백사장 서쪽 끝", "en": "West end of Haeundae Beach" },
+          "value": { "ko": "마린시티 (프레제 카페 부근)", "en": "Marine City (Near Presse Café)" },
           "sub": {
-            "ko": "지하철 2호선 동백역 1번 출구 → 도보 5분",
-            "en": "Subway Line 2, Dongbaek Stn. Exit 1 → 5 min walk"
+            "ko": "지하철 2호선 동백역 1번 출구 → 도보 약 10분 / 마린시티2로 일대",
+            "en": "Subway Line 2, Dongbaek Stn. Exit 1 → 10 min walk / Marine City 2-ro area"
           }
         },
         "parking": {
           "label": { "ko": "주차", "en": "PARKING" },
-          "value": { "ko": "동백공원 주차장", "en": "Dongbaek Park Parking" },
+          "value": { "ko": "두산위브더제니스 상가 주차장", "en": "Doosan We've the Zenith Mall Parking" },
           "sub": {
-            "ko": "시간당 1,200원 / 주말 매우 혼잡",
-            "en": "₩1,200/hour · Very busy on weekends"
+            "ko": "프레제 카페 이용 시 4시간 지원 / 마린시티 일대 공영주차장",
+            "en": "4 hrs free with Presse Café / Public parking nearby in Marine City"
           }
         },
         "cautions": {
@@ -298,37 +313,37 @@
         "nearby": {
           "label": { "ko": "주변 편의시설", "en": "NEARBY" },
           "value": {
-            "ko": "해운대 시내 카페/식당 다수, 더베이101, 그랜드호텔",
-            "en": "Many cafés and restaurants in Haeundae, The Bay 101, Grand Hotel"
+            "ko": "마린시티 카페거리, 더베이101, 누리마루 APEC하우스, 해운대 석각",
+            "en": "Marine City cafés, The Bay 101, Nuri Maru APEC House, Haeundae Stone Inscription"
           }
         }
       },
       "restrooms": [
         {
           "icon": "wc",
-          "name": { "ko": "해운대 백사장 공중화장실", "en": "Haeundae Beach Restroom" },
-          "dist": { "ko": "시작점 · 0 KM", "en": "START · 0 KM" },
-          "hours": { "ko": "24시간 운영", "en": "24 HOURS" },
-          "always": true
-        },
-        {
-          "icon": "wc",
-          "name": { "ko": "동백섬 화장실", "en": "Dongbaek Island Restroom" },
-          "dist": { "ko": "1.5 KM · 누리마루 인근", "en": "1.5 KM · Near Nurimaru" },
+          "name": { "ko": "동백공원 화장실", "en": "Dongbaek Park Restroom" },
+          "dist": { "ko": "코스 중간 · 약 1.3 KM", "en": "Mid-course · ~1.3 KM" },
           "hours": { "ko": "06:00 — 22:00", "en": "06:00 — 22:00" },
           "always": false
         },
         {
           "icon": "wc",
-          "name": { "ko": "동백공원 화장실", "en": "Dongbaek Park Restroom" },
-          "dist": { "ko": "도착점 · 3.4 KM", "en": "END · 3.4 KM" },
+          "name": { "ko": "등대광장 화장실", "en": "Lighthouse Plaza Restroom" },
+          "dist": { "ko": "코스 중간 · 약 1.8 KM", "en": "Mid-course · ~1.8 KM" },
           "hours": { "ko": "24시간 운영", "en": "24 HOURS" },
           "always": true
         },
         {
           "icon": "local_cafe",
-          "name": { "ko": "더베이101 카페", "en": "The Bay 101 Café" },
-          "dist": { "ko": "도착 후 · 3.6 KM", "en": "After finish · 3.6 KM" },
+          "name": { "ko": "프레제 베이커리 (출발점)", "en": "Presse Bakery (Start)" },
+          "dist": { "ko": "출발/도착 · 0 KM", "en": "Start/End · 0 KM" },
+          "hours": { "ko": "07:00 — 22:00", "en": "07:00 — 22:00" },
+          "always": false
+        },
+        {
+          "icon": "local_cafe",
+          "name": { "ko": "더베이101", "en": "The Bay 101" },
+          "dist": { "ko": "동백섬 입구 · 약 0.8 KM", "en": "Near entry · ~0.8 KM" },
           "hours": { "ko": "11:00 — 24:00", "en": "11:00 — 24:00" },
           "always": false
         }
@@ -367,8 +382,8 @@
       "hero_image": "",
       "gpx": "data/tracks/dalmaji-uphill.gpx",
       "story": {
-        "ko": "해운대 미포에서 달맞이 고개까지, 99m 고도를 끌어올리는 부산의 클래식 업힐. 정상에서 마주하는 동해 전망과 청사포 해변길의 하강. 다리에 불이 붙는 걸 느끼면, 그게 바로 부산 러너의 통과의례.",
-        "en": "From Mipo to Dalmaji Pass, climbing 99m of elevation — Busan's classic uphill challenge. Reach the top for sweeping East Sea views, then descend along Cheongsapo coast. When your legs burn, you've earned your stripes as a Busan runner."
+        "ko": "해운대 미포에서 달맞이 고개까지, 99m 고도를 끌어올리는 부산의 클래식 업힐. 정상의 해월정에서 마주하는 동해 전망과 달맞이길의 하강. 다리에 불이 붙는 걸 느끼면, 그게 바로 부산 러너의 통과의례.",
+        "en": "From Mipo to Dalmaji Pass, climbing 99m of elevation — Busan's classic uphill challenge. Reach Haewoljeong pavilion at the top for sweeping East Sea views, then descend along Dalmaji-gil. When your legs burn, you've earned your stripes as a Busan runner."
       },
       "story_title": {
         "ko": "다리가 불타오를 때, <em>러너의 훈장.</em>",
@@ -378,8 +393,8 @@
         {
           "id": "mipo-start",
           "num": "01",
-          "lat": 35.1601,
-          "lon": 129.1707,
+          "lat": 35.16006,
+          "lon": 129.17074,
           "name": { "ko": "미포 출발점", "en": "Mipo Start" },
           "name_secondary": { "ko": "Mipo", "en": "미포" },
           "desc": {
@@ -390,28 +405,29 @@
         {
           "id": "dalmaji-peak",
           "num": "02",
-          "lat": 35.1645,
-          "lon": 129.1810,
+          "lat": 35.15714,
+          "lon": 129.18188,
           "name": { "ko": "달맞이 정상", "en": "Dalmaji Peak" },
-          "name_secondary": { "ko": "Dalmaji", "en": "달맞이" },
+          "name_secondary": { "ko": "Haewoljeong", "en": "해월정" },
           "desc": {
-            "ko": "해발 111m. 동해 일출과 해운대 시내가 한눈에. 달맞이 카페거리 시작점.",
-            "en": "111m elevation. Panoramic East Sea sunrise + Haeundae skyline. Start of Dalmaji café street."
+            "ko": "해발 111m. 해월정과 달맞이공원. 동해 일출과 해운대 시내가 한눈에.",
+            "en": "111m elevation. Haewoljeong pavilion and Dalmaji Park. Panoramic East Sea sunrise + Haeundae skyline."
           }
         },
         {
-          "id": "cheongsapo-down",
+          "id": "dalmaji-down",
           "num": "03",
-          "lat": 35.1620,
-          "lon": 129.1855,
-          "name": { "ko": "청사포 하강", "en": "Cheongsapo Descent" },
-          "name_secondary": { "ko": "Cheongsapo", "en": "청사포" },
+          "lat": 35.15697,
+          "lon": 129.17666,
+          "name": { "ko": "달맞이 하강", "en": "Dalmaji Descent" },
+          "name_secondary": { "ko": "Descent", "en": "하강" },
           "desc": {
-            "ko": "하강 구간. 무릎 조심. 청사포 해변길 따라 미포로 복귀.",
-            "en": "Downhill section. Watch your knees. Coast back to Mipo via Cheongsapo path."
+            "ko": "하강 구간. 무릎 조심. 달맞이길 따라 미포로 복귀.",
+            "en": "Downhill section. Watch your knees. Back to Mipo via Dalmaji-gil."
           }
         }
       ],
+      "spots": [],
       "practical": {
         "time": {
           "label": { "ko": "추천 시간", "en": "RECOMMENDED TIME" },
@@ -447,8 +463,8 @@
         "nearby": {
           "label": { "ko": "주변 편의시설", "en": "NEARBY" },
           "value": {
-            "ko": "달맞이 카페거리 (정상 인근), 미포 편의점, 청사포 카페",
-            "en": "Dalmaji café street (near peak), Mipo conv. stores, Cheongsapo cafés"
+            "ko": "달맞이 카페거리 (정상 인근), 해월정 전망대, 미포 편의점",
+            "en": "Dalmaji café street (near peak), Haewoljeong observatory, Mipo conv. stores"
           }
         }
       },
@@ -465,13 +481,6 @@
           "name": { "ko": "달맞이 카페거리", "en": "Dalmaji Café Street" },
           "dist": { "ko": "정상 · 약 2 KM", "en": "Peak · ~2 KM" },
           "hours": { "ko": "08:00 — 22:00", "en": "08:00 — 22:00" },
-          "always": false
-        },
-        {
-          "icon": "wc",
-          "name": { "ko": "청사포 정거장", "en": "Cheongsapo Station" },
-          "dist": { "ko": "하강 후 · 약 3.5 KM", "en": "After descent · ~3.5 KM" },
-          "hours": { "ko": "07:00 — 21:00", "en": "07:00 — 21:00" },
           "always": false
         }
       ]
