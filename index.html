@@ -162,41 +162,18 @@ input, textarea { font-family: inherit; }
 .course-card-bg::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 24px 24px; }
 .course-card-bg::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 80% 20%, rgba(255,107,74,0.18) 0%, transparent 60%); }
 
-/* 카드 캐러셀 */
-.course-card-carousel {
+/* 메인 카드 단일 이미지 (캐러셀 X) */
+.course-card-photo {
   position: absolute; inset: 0; z-index: 1;
-  display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
-  scrollbar-width: none; -ms-overflow-style: none;
-  scroll-behavior: smooth;
 }
-.course-card-carousel::-webkit-scrollbar { display: none; }
-.course-card-slide {
-  flex: 0 0 100%; height: 100%; scroll-snap-align: start;
-  position: relative;
+.course-card-photo img {
+  width: 100%; height: 100%;
+  object-fit: cover;
 }
-.course-card-slide img { width: 100%; height: 100%; object-fit: cover; }
-.course-card-slide::after {
+.course-card-photo::after {
   content: ''; position: absolute; inset: 0;
   background: linear-gradient(to bottom,
     rgba(0,0,0,0.1) 0%, rgba(15,35,64,0.4) 50%, rgba(15,35,64,0.95) 100%);
-}
-
-/* 캐러셀 인디케이터 (점) */
-.carousel-dots {
-  position: absolute; bottom: 130px; left: 18px;
-  z-index: 4; display: flex; gap: 5px;
-  pointer-events: none;
-}
-.carousel-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.4);
-  transition: all 0.2s;
-}
-.carousel-dot.active {
-  background: white;
-  width: 18px;
-  border-radius: 3px;
 }
 
 .course-card-num {
@@ -246,9 +223,51 @@ input, textarea { font-family: inherit; }
 .detail-top-btn:hover { background: var(--navy-ink); color: white; border-color: var(--navy-ink); }
 
 .detail-hero { position: relative; height: 75vh; min-height: 540px; background: var(--navy); overflow: hidden; }
-.detail-hero-photo { position: absolute; inset: 0; }
-.detail-hero-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 65%; }
-.detail-hero-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(15,35,64,0.4) 0%, rgba(15,35,64,0.1) 30%, rgba(15,35,64,0.4) 70%, rgba(15,35,64,0.95) 100%); }
+/* 상세 히어로 캐러셀 (수동 스와이프) */
+.detail-hero-carousel {
+  position: absolute; inset: 0; z-index: 0;
+  display: flex; overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none; -ms-overflow-style: none;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+.detail-hero-carousel::-webkit-scrollbar { display: none; }
+.hero-slide {
+  flex: 0 0 100%; height: 100%;
+  scroll-snap-align: start;
+  position: relative;
+}
+.hero-slide img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center 65%;
+  pointer-events: none; /* 좌우 스와이프 방해 방지 */
+}
+.hero-slide::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(to bottom,
+    rgba(15,35,64,0.4) 0%, rgba(15,35,64,0.1) 30%,
+    rgba(15,35,64,0.4) 70%, rgba(15,35,64,0.95) 100%);
+  pointer-events: none;
+}
+/* 인디케이터 점 (오른쪽 상단) */
+.detail-hero-dots {
+  position: absolute; top: 90px; left: 24px;
+  z-index: 4; display: flex; gap: 5px;
+  pointer-events: none;
+}
+.hero-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+  transition: all 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.hero-dot.active {
+  background: white;
+  width: 22px;
+  border-radius: 4px;
+}
 .detail-hero-content { position: absolute; inset: 0; padding: 90px 24px 36px; display: flex; flex-direction: column; justify-content: space-between; color: white; z-index: 2; }
 .detail-hero-num {
   font-family: 'Big Shoulders Display', sans-serif; font-weight: 800;
@@ -578,9 +597,7 @@ input, textarea { font-family: inherit; }
   </header>
 
   <section class="detail-hero">
-    <div class="detail-hero-photo">
-      <img id="detailHeroPhoto" src="" alt="" />
-    </div>
+    <div class="detail-hero-carousel" id="detailHeroCarousel"></div>
     <div class="detail-hero-content">
       <div>
         <div class="detail-hero-num" id="detailHeroNum">01</div>
@@ -594,6 +611,8 @@ input, textarea { font-family: inherit; }
         <div class="detail-stats-grid" id="detailStatsGrid"></div>
       </div>
     </div>
+    <!-- 히어로 캐러셀 인디케이터 점 -->
+    <div class="detail-hero-dots" id="detailHeroDots"></div>
   </section>
 
   <div class="engagement-bar">
