@@ -341,7 +341,21 @@ async function loadCardPhotos() {
 }
 
 // 코스의 카드 사진들 가져오기 (DB 우선, 없으면 정적)
-function getCardImages(course) {
+// 메인 카드용 (1장 고정) - card_1 우선, 없으면 정적 폴백
+function getMainCardImage(course) {
+  const dbPhotos = state.cardPhotosByCourse[course.id];
+  if (dbPhotos && dbPhotos.card_1 && dbPhotos.card_1.length) {
+    return dbPhotos.card_1[0].public_url;
+  }
+  // 정적 폴백 (courses.json의 card_images 첫 번째)
+  if (course.card_images && course.card_images.length) {
+    return course.card_images[0];
+  }
+  return course.hero_image || '';
+}
+
+// 상세 페이지 히어로 캐러셀용 (card_1, card_2, card_3)
+function getCarouselImages(course) {
   const dbPhotos = state.cardPhotosByCourse[course.id];
   const slots = ['card_1', 'card_2', 'card_3'];
   const images = [];
@@ -352,15 +366,16 @@ function getCardImages(course) {
     }
   }
   
-  // DB에 없으면 정적 폴백
+  // DB에 카드 사진 없으면 정적 폴백
   if (!images.length && course.card_images && course.card_images.length) {
     return course.card_images;
   }
   
-  return images.length ? images : (course.card_images || []);
+  return images;
 }
 
-function getHeroImage(course) {
+// OG 이미지용 (SNS 공유) - hero 슬롯 우선, 없으면 정적 hero_image
+function getOgImage(course) {
   const dbPhotos = state.cardPhotosByCourse[course.id];
   if (dbPhotos && dbPhotos.hero && dbPhotos.hero.length) {
     return dbPhotos.hero[0].public_url;
@@ -391,32 +406,16 @@ function renderCourseGrid() {
       meta = `${dist} KM · COMING SOON`;
     }
     
-    const cardImages = c.ready ? getCardImages(c) : [];
+    const mainCardImage = c.ready ? getMainCardImage(c) : '';
     const courseColor = c.color?.primary || '#FF6B4A';
     const numColor = c.ready ? courseColor : 'rgba(255,255,255,0.18)';
 
     let mediaHtml;
-    if (cardImages.length > 1) {
-      // 캐러셀
+    if (mainCardImage) {
+      // 단일 고정 이미지 (캐러셀 제거)
       mediaHtml = `
-        <div class="course-card-carousel" data-carousel-id="${escapeHtml(c.id)}">
-          ${cardImages.map((img, i) => `
-            <div class="course-card-slide">
-              <img src="${escapeHtml(img)}" alt="${escapeHtml(titleSlogan)} ${i+1}" loading="lazy" />
-            </div>
-          `).join('')}
-        </div>
-        <div class="carousel-dots" data-dots-for="${escapeHtml(c.id)}">
-          ${cardImages.map((_, i) => `<div class="carousel-dot ${i === 0 ? 'active' : ''}"></div>`).join('')}
-        </div>
-      `;
-    } else if (cardImages.length === 1) {
-      // 단일 이미지
-      mediaHtml = `
-        <div class="course-card-carousel">
-          <div class="course-card-slide">
-            <img src="${escapeHtml(cardImages[0])}" alt="${escapeHtml(titleSlogan)}" loading="lazy" />
-          </div>
+        <div class="course-card-photo">
+          <img src="${escapeHtml(mainCardImage)}" alt="${escapeHtml(titleSlogan)}" loading="lazy" />
         </div>
       `;
     } else {
@@ -444,11 +443,9 @@ function renderCourseGrid() {
     `;
   }).join('');
 
-  // 클릭 → 상세
+  // 클릭 → 상세 (캐러셀 스와이프 체크 제거 - 캐러셀 없으니까)
   grid.querySelectorAll('.course-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      // 캐러셀 스와이프 중이면 무시
-      if (card._isScrolling) return;
+    card.addEventListener('click', () => {
       if (card.dataset.ready === 'true') {
         const id = card.dataset.courseId;
         const course = state.courses.find(c => c.id === id);
@@ -457,31 +454,6 @@ function renderCourseGrid() {
         showToast(t('toast.coming'), 'schedule');
       }
     });
-  });
-
-  // 캐러셀 인디케이터 동기화
-  grid.querySelectorAll('.course-card-carousel').forEach(carousel => {
-    const id = carousel.dataset.carouselId;
-    if (!id) return;
-    const dotsContainer = grid.querySelector(`[data-dots-for="${id}"]`);
-    if (!dotsContainer) return;
-    const dots = dotsContainer.querySelectorAll('.carousel-dot');
-    
-    let scrollTimer;
-    carousel.addEventListener('scroll', () => {
-      const card = carousel.closest('.course-card');
-      if (card) card._isScrolling = true;
-      clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(() => {
-        if (card) card._isScrolling = false;
-      }, 100);
-      
-      const slideWidth = carousel.clientWidth;
-      const idx = Math.round(carousel.scrollLeft / slideWidth);
-      dots.forEach((d, i) => {
-        d.classList.toggle('active', i === idx);
-      });
-    }, { passive: true });
   });
 
   // 헤더 통계 갱신
@@ -500,17 +472,16 @@ function renderDetail(course) {
   // 코스 색상 적용
   applyCourseColor(course);
 
-  // 히어로
-  const photo = document.getElementById('detailHeroPhoto');
-  if (photo) {
-    const heroImg = getHeroImage(course);
-    photo.src = heroImg;
-    photo.alt = course.name?.[currentLang] || '';
-  }
+  // 히어로 - card_1, card_2, card_3 캐러셀
+  renderDetailHeroCarousel(course);
+  
   document.getElementById('detailHeroNum').textContent = course.num;
   document.getElementById('detailHeroTitle').textContent = course.title_en || course.name?.en || '';
   document.getElementById('detailHeroSubtitle').textContent =
     currentLang === 'en' ? (course.subtitle_en || '') : (course.subtitle_ko || '');
+
+  // OG 이미지 동적 업데이트 (SNS 공유용)
+  updateOgImage(course);
 
   // 통계 그리드 4칸 ⭐
   renderStatsGrid(course);
@@ -560,6 +531,86 @@ function renderDetail(course) {
   // 지도 (Leaflet)
   if (course.gpx && window.BusanRunnerMap) {
     window.BusanRunnerMap.render(course, currentLang);
+  }
+}
+
+/* ============== DETAIL HERO CAROUSEL ============== */
+function renderDetailHeroCarousel(course) {
+  const carouselContainer = document.getElementById('detailHeroCarousel');
+  const dotsContainer = document.getElementById('detailHeroDots');
+  if (!carouselContainer) return;
+  
+  const images = getCarouselImages(course);
+  
+  if (!images.length) {
+    carouselContainer.innerHTML = '';
+    if (dotsContainer) dotsContainer.innerHTML = '';
+    return;
+  }
+  
+  // 캐러셀 슬라이드 렌더
+  carouselContainer.innerHTML = images.map((url, i) => `
+    <div class="hero-slide">
+      <img src="${escapeHtml(url)}" alt="${escapeHtml(course.name?.[currentLang] || '')} ${i+1}" />
+    </div>
+  `).join('');
+  
+  // 인디케이터 점
+  if (dotsContainer) {
+    if (images.length > 1) {
+      dotsContainer.innerHTML = images.map((_, i) => 
+        `<div class="hero-dot ${i === 0 ? 'active' : ''}"></div>`
+      ).join('');
+    } else {
+      dotsContainer.innerHTML = '';  // 1장이면 인디케이터 X
+    }
+  }
+  
+  // 스크롤 → 인디케이터 동기화 (이전 리스너 제거 후 재등록)
+  if (carouselContainer._scrollHandler) {
+    carouselContainer.removeEventListener('scroll', carouselContainer._scrollHandler);
+  }
+  
+  if (images.length > 1 && dotsContainer) {
+    const handler = () => {
+      const slideWidth = carouselContainer.clientWidth;
+      const idx = Math.round(carouselContainer.scrollLeft / slideWidth);
+      const dots = dotsContainer.querySelectorAll('.hero-dot');
+      dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    };
+    carouselContainer.addEventListener('scroll', handler, { passive: true });
+    carouselContainer._scrollHandler = handler;
+  }
+  
+  // 캐러셀 처음 위치로 리셋
+  carouselContainer.scrollLeft = 0;
+}
+
+/* ============== OG IMAGE (SNS 공유) ============== */
+function updateOgImage(course) {
+  const ogUrl = getOgImage(course);
+  if (!ogUrl) return;
+  
+  // 절대 URL로 변환 (상대 경로면 OG 크롤러가 못 읽음)
+  let absoluteUrl = ogUrl;
+  if (!ogUrl.startsWith('http')) {
+    absoluteUrl = window.location.origin + '/' + ogUrl.replace(/^\//, '');
+  }
+  
+  // 기존 og:image 메타 업데이트 또는 추가
+  let ogMeta = document.querySelector('meta[property="og:image"]');
+  if (!ogMeta) {
+    ogMeta = document.createElement('meta');
+    ogMeta.setAttribute('property', 'og:image');
+    document.head.appendChild(ogMeta);
+  }
+  ogMeta.setAttribute('content', absoluteUrl);
+  
+  // og:title도 코스명으로 업데이트
+  const courseName = course.name?.[currentLang] || course.name?.ko || '';
+  let titleMeta = document.querySelector('meta[property="og:title"]');
+  if (titleMeta) {
+    titleMeta.setAttribute('content', `${courseName} · 부산러너`);
   }
 }
 
