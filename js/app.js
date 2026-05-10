@@ -205,6 +205,7 @@ const state = {
   courses: [],
   cardPhotosByCourse: {},  // { courseId: { card_1: [...], card_2: [...], ..., hero: [...] } }
   currentCourse: null,
+  currentVariantId: null,  // 코스 내 variant 선택 (예: "default", "long")
   photos: [],
   comments: [],
   likes: 0,
@@ -212,6 +213,51 @@ const state = {
   views: 0,
   totalRunners: 0,
 };
+
+// variant 선택 기억 (코스별로 저장)
+function getRememberedVariant(courseId) {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY + '_variant_' + courseId);
+    return saved || null;
+  } catch (e) { return null; }
+}
+function rememberVariant(courseId, variantId) {
+  try {
+    localStorage.setItem(STORAGE_KEY + '_variant_' + courseId, variantId);
+  } catch (e) {}
+}
+
+// 현재 활성 variant 객체 반환 (없으면 null)
+function getActiveVariant(course) {
+  if (!course || !course.variants || !course.variants.length) return null;
+  // 1) state에 저장된 ID
+  if (state.currentVariantId) {
+    const v = course.variants.find(v => v.id === state.currentVariantId);
+    if (v) return v;
+  }
+  // 2) localStorage 기억
+  const remembered = getRememberedVariant(course.id);
+  if (remembered) {
+    const v = course.variants.find(v => v.id === remembered);
+    if (v) return v;
+  }
+  // 3) 첫 번째 (기본)
+  return course.variants[0];
+}
+
+// variant 적용된 코스 데이터 (병합)
+function getEffectiveCourse(course) {
+  const variant = getActiveVariant(course);
+  if (!variant) return course;
+  return {
+    ...course,
+    distance_km: variant.distance_km ?? course.distance_km,
+    duration_min: variant.duration_min ?? course.duration_min,
+    elev_gain_m: variant.elev_gain_m ?? course.elev_gain_m,
+    difficulty: variant.difficulty || course.difficulty,
+    gpx: variant.gpx || course.gpx,
+  };
+}
 
 function loadUserState() {
   try {
@@ -483,8 +529,14 @@ function renderDetail(course) {
   // OG 이미지 동적 업데이트 (SNS 공유용)
   updateOgImage(course);
 
+  // Variant 토글 렌더 (있는 코스만)
+  renderVariantToggle(course);
+
+  // variant 적용된 코스 데이터 (통계/지도가 이걸 반영)
+  const effective = getEffectiveCourse(course);
+
   // 통계 그리드 4칸 ⭐
-  renderStatsGrid(course);
+  renderStatsGrid(effective);
 
   // 스토리
   const storyTitle = document.getElementById('storyTitle');
@@ -528,10 +580,68 @@ function renderDetail(course) {
     `).join('');
   }
 
-  // 지도 (Leaflet)
-  if (course.gpx && window.BusanRunnerMap) {
-    window.BusanRunnerMap.render(course, currentLang);
+  // 지도 (Leaflet) - variant의 gpx 사용
+  if (effective.gpx && window.BusanRunnerMap) {
+    window.BusanRunnerMap.render(effective, currentLang);
   }
+}
+
+/* ============== VARIANT TOGGLE (기본/롱런 등) ============== */
+function renderVariantToggle(course) {
+  const container = document.getElementById('variantToggle');
+  if (!container) return;
+  
+  // variants 없으면 숨기기
+  if (!course.variants || course.variants.length < 2) {
+    container.style.display = 'none';
+    container.innerHTML = '';
+    return;
+  }
+  
+  const activeVariant = getActiveVariant(course);
+  const activeId = activeVariant ? activeVariant.id : course.variants[0].id;
+  
+  container.style.display = '';
+  container.innerHTML = course.variants.map(v => {
+    const name = v.name?.[currentLang] || v.name?.ko || v.id;
+    const isActive = v.id === activeId;
+    return `
+      <button class="variant-btn ${isActive ? 'active' : ''}" 
+              data-variant-id="${escapeHtml(v.id)}">
+        <span>${escapeHtml(name)}</span>
+        <b>${v.distance_km}KM</b>
+      </button>
+    `;
+  }).join('');
+  
+  // 클릭 핸들러
+  container.querySelectorAll('.variant-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const newId = btn.dataset.variantId;
+      if (newId === state.currentVariantId) return;  // 같은 거 클릭 시 무시
+      
+      // 상태 + localStorage 업데이트
+      state.currentVariantId = newId;
+      rememberVariant(course.id, newId);
+      
+      // 활성 버튼 갱신
+      container.querySelectorAll('.variant-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.variantId === newId);
+      });
+      
+      // 통계와 지도 다시 렌더
+      const effective = getEffectiveCourse(course);
+      renderStatsGrid(effective);
+      
+      // 지도는 destroy 후 재렌더 필요 (다른 GPX)
+      if (window.BusanRunnerMap) {
+        window.BusanRunnerMap.destroy();
+        if (effective.gpx) {
+          window.BusanRunnerMap.render(effective, currentLang);
+        }
+      }
+    });
+  });
 }
 
 /* ============== DETAIL HERO CAROUSEL ============== */
@@ -1157,12 +1267,15 @@ async function go(view, course) {
 
   if (view === 'detail' && course) {
     state.currentCourse = course;
+    // variant 초기화 - localStorage 기억 우선, 없으면 첫 번째
+    state.currentVariantId = getRememberedVariant(course.id);
     history.pushState({ view, courseId: course.id }, '', '#' + course.id);
     renderDetail(course);
     recordView();
     refreshAll();
   } else {
     state.currentCourse = null;
+    state.currentVariantId = null;
     resetCourseColor();
     if (window.BusanRunnerMap) window.BusanRunnerMap.destroy();
     history.pushState({ view }, '', '#');
