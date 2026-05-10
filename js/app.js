@@ -464,8 +464,11 @@ function renderCourseGrid() {
           <img src="${escapeHtml(mainCardImage)}" alt="${escapeHtml(titleSlogan)}" loading="lazy" />
         </div>
       `;
+    } else if (c.ready) {
+      // ready 코스인데 사진 없음 → 코스 색상 그라데이션 폴백
+      mediaHtml = `<div class="course-card-bg" style="background:linear-gradient(135deg, var(--navy) 0%, ${courseColor}33 100%)"></div>`;
     } else {
-      // 그라데이션 폴백
+      // 준비중 코스 - 기본 그라데이션
       mediaHtml = '<div class="course-card-bg"></div>';
     }
 
@@ -651,9 +654,15 @@ function renderDetailHeroCarousel(course) {
   if (!carouselContainer) return;
   
   const images = getCarouselImages(course);
+  const courseColor = course?.color?.primary || '#FF6B4A';
   
   if (!images.length) {
-    carouselContainer.innerHTML = '';
+    // 사진 없음 → 코스 색상 그라데이션 폴백
+    carouselContainer.innerHTML = `
+      <div class="hero-slide hero-slide-empty" 
+           style="background:linear-gradient(135deg, var(--navy-deep) 0%, ${courseColor} 100%)">
+      </div>
+    `;
     if (dotsContainer) dotsContainer.innerHTML = '';
     return;
   }
