@@ -164,7 +164,7 @@ window.BusanRunnerMap = (function() {
 
       updateMapStats(stats, lang);
 
-      if (stats.elev_range > 30) {
+      if (stats.elev_range > 5) {
         renderElevationChart(points, stats, lang, courseColor);
       } else {
         const elevContainer = document.getElementById('elevChart');

@@ -386,6 +386,14 @@ async function loadCardPhotos() {
   }
 }
 
+// tagline 가져오기 (JSON에서만)
+function getTagline(course, lang) {
+  if (course.tagline) {
+    return course.tagline[lang] || course.tagline.ko || '';
+  }
+  return '';
+}
+
 // 코스의 카드 사진들 가져오기 (DB 우선, 없으면 정적)
 // 메인 카드용 (1장 고정) - card_1 우선, 없으면 정적 폴백
 function getMainCardImage(course) {
@@ -540,6 +548,18 @@ function renderDetail(course) {
 
   // 통계 그리드 4칸 ⭐
   renderStatsGrid(effective);
+
+  // 한 줄 설명 (tagline) - DB 우선, JSON 폴백
+  const taglineEl = document.getElementById('detailTagline');
+  if (taglineEl) {
+    const tagline = getTagline(course, currentLang);
+    if (tagline) {
+      taglineEl.textContent = tagline;
+      taglineEl.style.display = '';
+    } else {
+      taglineEl.style.display = 'none';
+    }
+  }
 
   // 스토리
   const storyTitle = document.getElementById('storyTitle');
