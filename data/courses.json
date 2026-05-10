@@ -327,8 +327,146 @@
       ]
     },
     {
-      "id": "gwangalli",
+      "id": "dalmaji-uphill",
       "num": "03",
+      "ready": true,
+      "featured": false,
+      "tag": "UPHILL CHALLENGE",
+      "color": {
+        "primary": "#2D5F3F",
+        "soft": "#D5E5DA",
+        "name": "forest"
+      },
+      "name": {
+        "en": "DALMAJI UPHILL",
+        "ko": "달맞이 업힐"
+      },
+      "title_en": "CLIMB\nDALMAJI.",
+      "subtitle_ko": "미포 → 달맞이 고개 → 미포",
+      "subtitle_en": "Mipo → Dalmaji Hill → Mipo",
+      "distance_km": 5.1,
+      "duration_min": 40,
+      "difficulty": {
+        "ko": "중급",
+        "en": "MEDIUM"
+      },
+      "elev_gain_m": 129,
+      "card_images": [],
+      "hero_image": "",
+      "gpx": "data/tracks/dalmaji-uphill.gpx",
+      "story": {
+        "ko": "해운대 미포에서 달맞이 고개까지, 99m 고도를 끌어올리는 부산의 클래식 업힐. 정상에서 마주하는 동해 전망과 청사포 해변길의 하강. 다리에 불이 붙는 걸 느끼면, 그게 바로 부산 러너의 통과의례.",
+        "en": "From Mipo to Dalmaji Pass, climbing 99m of elevation — Busan's classic uphill challenge. Reach the top for sweeping East Sea views, then descend along Cheongsapo coast. When your legs burn, you've earned your stripes as a Busan runner."
+      },
+      "story_title": {
+        "ko": "다리가 불타오를 때, <em>러너의 훈장.</em>",
+        "en": "When your legs burn, <em>you've earned it.</em>"
+      },
+      "stops": [
+        {
+          "id": "mipo-start",
+          "num": "01",
+          "lat": 35.1601,
+          "lon": 129.1707,
+          "name": { "ko": "미포 출발점", "en": "Mipo Start" },
+          "name_secondary": { "ko": "Mipo", "en": "미포" },
+          "desc": {
+            "ko": "출발점이자 도착점. 평지에서 시작해 곧 가파른 오르막이 시작됩니다.",
+            "en": "Start and finish line. The climb begins right after a brief flat warm-up."
+          }
+        },
+        {
+          "id": "dalmaji-peak",
+          "num": "02",
+          "lat": 35.1645,
+          "lon": 129.1810,
+          "name": { "ko": "달맞이 정상", "en": "Dalmaji Peak" },
+          "name_secondary": { "ko": "Dalmaji", "en": "달맞이" },
+          "desc": {
+            "ko": "해발 111m. 동해 일출과 해운대 시내가 한눈에. 달맞이 카페거리 시작점.",
+            "en": "111m elevation. Panoramic East Sea sunrise + Haeundae skyline. Start of Dalmaji café street."
+          }
+        },
+        {
+          "id": "cheongsapo-down",
+          "num": "03",
+          "lat": 35.1620,
+          "lon": 129.1855,
+          "name": { "ko": "청사포 하강", "en": "Cheongsapo Descent" },
+          "name_secondary": { "ko": "Cheongsapo", "en": "청사포" },
+          "desc": {
+            "ko": "하강 구간. 무릎 조심. 청사포 해변길 따라 미포로 복귀.",
+            "en": "Downhill section. Watch your knees. Coast back to Mipo via Cheongsapo path."
+          }
+        }
+      ],
+      "practical": {
+        "time": {
+          "label": { "ko": "추천 시간", "en": "RECOMMENDED TIME" },
+          "value": { "ko": "<em>이른 아침</em> 06:00 — 08:00", "en": "<em>Early morning</em> 06:00 — 08:00" },
+          "sub": {
+            "ko": "여름엔 무조건 새벽. 한낮은 그늘 거의 없음. 겨울도 OK.",
+            "en": "Summer: only at dawn. Almost no shade in the heat. Winter is fine."
+          }
+        },
+        "start": {
+          "label": { "ko": "시작점", "en": "STARTING POINT" },
+          "value": { "ko": "미포항 입구", "en": "Mipo Port Entrance" },
+          "sub": {
+            "ko": "지하철 2호선 중동역 7번 출구 → 도보 약 15분",
+            "en": "Subway Line 2, Jungdong Stn. Exit 7 → 15 min walk"
+          }
+        },
+        "parking": {
+          "label": { "ko": "주차", "en": "PARKING" },
+          "value": { "ko": "미포 공영주차장", "en": "Mipo Public Parking" },
+          "sub": {
+            "ko": "시간당 1,000원 / 주말 만차 주의",
+            "en": "₩1,000/hour · Fills up on weekends"
+          }
+        },
+        "cautions": {
+          "label": { "ko": "주의사항", "en": "CAUTIONS" },
+          "value": {
+            "ko": "초반 1km가 가장 가파름 · 페이스 조절 필수 · 하강 시 무릎 부상 주의 · 차도 일부 구간 통과",
+            "en": "First 1km is steepest · Pace yourself · Watch knees on descent · Some road sections"
+          }
+        },
+        "nearby": {
+          "label": { "ko": "주변 편의시설", "en": "NEARBY" },
+          "value": {
+            "ko": "달맞이 카페거리 (정상 인근), 미포 편의점, 청사포 카페",
+            "en": "Dalmaji café street (near peak), Mipo conv. stores, Cheongsapo cafés"
+          }
+        }
+      },
+      "restrooms": [
+        {
+          "icon": "wc",
+          "name": { "ko": "미포항 공중화장실", "en": "Mipo Public Restroom" },
+          "dist": { "ko": "시작/도착점 · 0 KM", "en": "START/END · 0 KM" },
+          "hours": { "ko": "24시간 운영", "en": "24 HOURS" },
+          "always": true
+        },
+        {
+          "icon": "local_cafe",
+          "name": { "ko": "달맞이 카페거리", "en": "Dalmaji Café Street" },
+          "dist": { "ko": "정상 · 약 2 KM", "en": "Peak · ~2 KM" },
+          "hours": { "ko": "08:00 — 22:00", "en": "08:00 — 22:00" },
+          "always": false
+        },
+        {
+          "icon": "wc",
+          "name": { "ko": "청사포 정거장", "en": "Cheongsapo Station" },
+          "dist": { "ko": "하강 후 · 약 3.5 KM", "en": "After descent · ~3.5 KM" },
+          "hours": { "ko": "07:00 — 21:00", "en": "07:00 — 21:00" },
+          "always": false
+        }
+      ]
+    },
+    {
+      "id": "gwangalli",
+      "num": "04",
       "ready": false,
       "tag": "NIGHT VIEW",
       "name": { "en": "GWANGALLI ARC", "ko": "광안리 해변 아치" },
@@ -337,7 +475,7 @@
     },
     {
       "id": "igidae",
-      "num": "04",
+      "num": "05",
       "ready": false,
       "tag": "CLIFF WALK",
       "name": { "en": "IGIDAE COAST", "ko": "이기대 해안" },
@@ -346,7 +484,7 @@
     },
     {
       "id": "nakdong",
-      "num": "05",
+      "num": "06",
       "ready": false,
       "tag": "RIVERSIDE",
       "name": { "en": "NAKDONG RIVER", "ko": "낙동강 하구" },
@@ -355,7 +493,7 @@
     },
     {
       "id": "yeongdo",
-      "num": "06",
+      "num": "07",
       "ready": false,
       "tag": "ISLAND",
       "name": { "en": "YEONGDO LOOP", "ko": "영도 절영해안" },
@@ -364,7 +502,7 @@
     },
     {
       "id": "suyeong",
-      "num": "07",
+      "num": "08",
       "ready": false,
       "tag": "CHERRY BLOSSOM",
       "name": { "en": "SUYEONG BLOOM", "ko": "수영강 벚꽃길" },
@@ -373,7 +511,7 @@
     },
     {
       "id": "dadaepo",
-      "num": "08",
+      "num": "09",
       "ready": false,
       "tag": "SUNSET",
       "name": { "en": "DADAEPO SUNSET", "ko": "다대포 일몰" },
@@ -382,7 +520,7 @@
     },
     {
       "id": "songdo",
-      "num": "09",
+      "num": "10",
       "ready": false,
       "tag": "SKYWALK",
       "name": { "en": "SONGDO RIDGE", "ko": "송도 해안볼레길" },
@@ -391,7 +529,7 @@
     },
     {
       "id": "busanpark",
-      "num": "10",
+      "num": "11",
       "ready": false,
       "tag": "CITY PARK",
       "name": { "en": "BUSAN PARK", "ko": "부산시민공원" },
