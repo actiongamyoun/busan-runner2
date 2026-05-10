@@ -366,6 +366,20 @@ input, textarea { font-family: inherit; }
   text-transform: uppercase;
 }
 
+/* 한 줄 설명 (tagline) - 통계 아래 */
+.detail-tagline {
+  margin-top: 14px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.45;
+  color: rgba(255,255,255,0.92);
+  letter-spacing: -0.005em;
+  padding-left: 12px;
+  border-left: 2px solid var(--course-color);
+}
+
 .engagement-bar { background: var(--white); border-bottom: 1px solid var(--line); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; position: sticky; top: 0; z-index: 30; }
 .engagement-stats { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
 .engagement-stat { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--mute); }
@@ -655,6 +669,8 @@ input, textarea { font-family: inherit; }
         <div class="variant-toggle" id="variantToggle" style="display:none"></div>
         <!-- 통계 그리드 4칸 ⭐ -->
         <div class="detail-stats-grid" id="detailStatsGrid"></div>
+        <!-- 한 줄 설명 (tagline) -->
+        <div class="detail-tagline" id="detailTagline" style="display:none"></div>
       </div>
     </div>
     <!-- 히어로 캐러셀 인디케이터 점 -->
