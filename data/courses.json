@@ -19,6 +19,10 @@
       "title_en": "FROM MIPO\nTO THE SEA.",
       "subtitle_ko": "미포 → 청사포 → 송정",
       "subtitle_en": "Mipo → Cheongsapo → Songjeong",
+      "tagline": {
+        "ko": "옛 동해선 위 평탄한 해안길 · 일출 명소",
+        "en": "Old railway-turned-path · Sunrise spot"
+      },
       "distance_km": 4.8,
       "duration_min": 30,
       "difficulty": {
@@ -197,6 +201,10 @@
       "title_en": "AROUND\nDONGBAEK.",
       "subtitle_ko": "해운대 → 동백섬 한 바퀴",
       "subtitle_en": "Haeundae → Dongbaek Island Loop",
+      "tagline": {
+        "ko": "동백섬 한 바퀴 · 광안대교 뷰 명소",
+        "en": "Around Dongbaek Island · Bridge view spot"
+      },
       "distance_km": 3.4,
       "duration_min": 20,
       "difficulty": {
@@ -344,6 +352,10 @@
       "title_en": "CLIMB\nDALMAJI.",
       "subtitle_ko": "미포 → 달맞이 고개 → 미포",
       "subtitle_en": "Mipo → Dalmaji Hill → Mipo",
+      "tagline": {
+        "ko": "99m 오르막 챌린지 · 정상 동해 전망",
+        "en": "99m climb · East Sea view from the top"
+      },
       "distance_km": 5.1,
       "duration_min": 40,
       "difficulty": {
