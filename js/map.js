@@ -1,5 +1,5 @@
 /* ============================================================
-   부산러너 - 지도 모듈 (Leaflet + GPX)
+   부산러너 v8 - 지도 모듈 (코스별 색상 지원)
    ============================================================ */
 
 window.BusanRunnerMap = (function() {
@@ -8,15 +8,12 @@ window.BusanRunnerMap = (function() {
   let mapInstance = null;
   let currentCourseId = null;
 
-  // GPX XML 파싱 → 점 배열
   function parseGPX(xmlText) {
     const parser = new DOMParser();
     const xml = parser.parseFromString(xmlText, 'text/xml');
     const trkpts = xml.getElementsByTagName('trkpt');
     const points = [];
-    let totalDist = 0;
-    let elevGain = 0;
-    let elevLoss = 0;
+    let totalDist = 0, elevGain = 0, elevLoss = 0;
     let minEle = Infinity, maxEle = -Infinity;
 
     for (let i = 0; i < trkpts.length; i++) {
@@ -25,10 +22,8 @@ window.BusanRunnerMap = (function() {
       const eleEl = trkpts[i].getElementsByTagName('ele')[0];
       const ele = eleEl ? parseFloat(eleEl.textContent) : 0;
       points.push({ lat, lon, ele, dist: 0 });
-      
       if (ele < minEle) minEle = ele;
       if (ele > maxEle) maxEle = ele;
-      
       if (i > 0) {
         const prev = points[i-1];
         const d = haversine(prev.lat, prev.lon, lat, lon);
@@ -39,17 +34,12 @@ window.BusanRunnerMap = (function() {
         else elevLoss += Math.abs(diff);
       }
     }
-
     return {
       points,
       stats: {
-        distance_m: totalDist,
-        distance_km: totalDist / 1000,
-        elev_gain: elevGain,
-        elev_loss: elevLoss,
-        min_ele: minEle,
-        max_ele: maxEle,
-        elev_range: maxEle - minEle
+        distance_m: totalDist, distance_km: totalDist / 1000,
+        elev_gain: elevGain, elev_loss: elevLoss,
+        min_ele: minEle, max_ele: maxEle, elev_range: maxEle - minEle
       }
     };
   }
@@ -60,42 +50,38 @@ window.BusanRunnerMap = (function() {
     const phi2 = lat2 * Math.PI / 180;
     const dphi = (lat2 - lat1) * Math.PI / 180;
     const dlam = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dphi/2) ** 2 + Math.cos(phi1) * Math.cos(phi2) * Math.sin(dlam/2) ** 2;
+    const a = Math.sin(dphi/2)**2 + Math.cos(phi1) * Math.cos(phi2) * Math.sin(dlam/2)**2;
     return 2 * R * Math.asin(Math.sqrt(a));
   }
 
-  // 메인: 지도 그리기
   async function render(course, lang) {
     const containerId = 'courseMap';
     const container = document.getElementById(containerId);
     if (!container) return;
+    
+    // 코스 색상
+    const courseColor = (course.color && course.color.primary) || '#FF6B4A';
 
-    // 기존 인스턴스 제거 (다른 코스로 전환 시)
     if (mapInstance && currentCourseId !== course.id) {
       mapInstance.remove();
       mapInstance = null;
     }
-    if (mapInstance) return; // 이미 그려졌으면 skip
+    if (mapInstance) return;
 
-    // 로딩 표시
     container.innerHTML = '<div class="map-loading">지도 로딩 중...</div>';
 
     try {
-      // GPX 파일 fetch
       const resp = await fetch(course.gpx);
       if (!resp.ok) throw new Error('GPX fetch 실패: ' + resp.status);
       const gpxText = await resp.text();
       const { points, stats } = parseGPX(gpxText);
-
       if (!points.length) {
         container.innerHTML = '<div class="map-error">트랙 데이터가 없어요</div>';
         return;
       }
 
-      // 컨테이너 비우고 지도용 div 생성
       container.innerHTML = '<div id="leafletMapEl" class="leaflet-map"></div>';
 
-      // Leaflet 지도 초기화
       const map = L.map('leafletMapEl', {
         scrollWheelZoom: false,
         attributionControl: false,
@@ -104,75 +90,63 @@ window.BusanRunnerMap = (function() {
       mapInstance = map;
       currentCourseId = course.id;
 
-      // OpenStreetMap 타일 (무료)
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-      }).addTo(map);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+      L.control.attribution({ prefix: '' }).addAttribution('© OpenStreetMap').addTo(map);
 
-      // 작은 attribution (필수)
-      L.control.attribution({
-        prefix: '',
-      }).addAttribution('© OpenStreetMap').addTo(map);
-
-      // 트랙 라인 그리기
       const latlngs = points.map(p => [p.lat, p.lon]);
       
-      // 외곽선 (흰색, 두꺼움)
+      // 외곽선
       L.polyline(latlngs, {
-        color: '#FFFFFF',
-        weight: 7,
-        opacity: 0.95,
-        smoothFactor: 1,
+        color: '#FFFFFF', weight: 7, opacity: 0.95, smoothFactor: 1,
       }).addTo(map);
       
-      // 메인 라인 (코랄)
+      // 메인 라인 (코스 색상)
       L.polyline(latlngs, {
-        color: '#FF6B4A',
-        weight: 4,
-        opacity: 1,
-        smoothFactor: 1,
+        color: courseColor, weight: 4, opacity: 1, smoothFactor: 1,
       }).addTo(map);
 
-      // 시작/끝 마커
+      // 시작 마커
       const startPt = points[0];
       const endPt = points[points.length - 1];
       
+      // 루프 코스(시작=끝) 판단
+      const isLoop = haversine(startPt.lat, startPt.lon, endPt.lat, endPt.lon) < 100;
+      
       const startIcon = L.divIcon({
         className: 'br-marker br-marker-start',
-        html: '<div class="br-pin br-pin-start">S</div>',
-        iconSize: [30, 30],
-        iconAnchor: [15, 15],
+        html: `<div class="br-pin br-pin-start">${isLoop ? 'S/F' : 'S'}</div>`,
+        iconSize: [isLoop ? 40 : 30, 30],
+        iconAnchor: [isLoop ? 20 : 15, 15],
       });
       L.marker([startPt.lat, startPt.lon], { icon: startIcon }).addTo(map);
       
-      const endIcon = L.divIcon({
-        className: 'br-marker br-marker-end',
-        html: '<div class="br-pin br-pin-end">F</div>',
-        iconSize: [30, 30],
-        iconAnchor: [15, 15],
-      });
-      L.marker([endPt.lat, endPt.lon], { icon: endIcon }).addTo(map);
+      // 끝 마커 (루프가 아닐 때만)
+      if (!isLoop) {
+        const endIcon = L.divIcon({
+          className: 'br-marker br-marker-end',
+          html: '<div class="br-pin br-pin-end">F</div>',
+          iconSize: [30, 30], iconAnchor: [15, 15],
+        });
+        L.marker([endPt.lat, endPt.lon], { icon: endIcon }).addTo(map);
+      }
 
-      // 정거장 마커들 (클릭 시 정보)
+      // 정거장 마커 (코스 색상)
       if (course.stops && course.stops.length) {
         course.stops.forEach((stop, idx) => {
           const stopIcon = L.divIcon({
             className: 'br-marker br-marker-stop',
-            html: `<div class="br-pin br-pin-stop">${stop.num || (idx+1)}</div>`,
-            iconSize: [32, 32],
-            iconAnchor: [16, 16],
+            html: `<div class="br-pin br-pin-stop" style="background:${courseColor}">${stop.num || (idx+1)}</div>`,
+            iconSize: [32, 32], iconAnchor: [16, 16],
           });
-          
           const m = L.marker([stop.lat, stop.lon], { icon: stopIcon }).addTo(map);
           
-          // 팝업 콘텐츠
           const stopName = (stop.name && stop.name[lang]) || stop.name?.ko || '';
           const stopSecond = (stop.name_secondary && stop.name_secondary[lang]) || '';
           const stopDesc = (stop.desc && stop.desc[lang]) || stop.desc?.ko || '';
           
           const popupHtml = `
             <div class="br-popup">
-              <div class="br-popup-num">${stop.num || (idx+1)}</div>
+              <div class="br-popup-num" style="color:${courseColor}">${stop.num || (idx+1)}</div>
               <div class="br-popup-name">${escapeHtml(stopName)}
                 ${stopSecond ? `<em>${escapeHtml(stopSecond)}</em>` : ''}
               </div>
@@ -180,23 +154,18 @@ window.BusanRunnerMap = (function() {
             </div>
           `;
           m.bindPopup(popupHtml, {
-            offset: [0, -8],
-            closeButton: true,
-            className: 'br-popup-wrapper',
-            maxWidth: 260,
+            offset: [0, -8], closeButton: true,
+            className: 'br-popup-wrapper', maxWidth: 260,
           });
         });
       }
 
-      // 트랙에 맞춰 화면 조정
       map.fitBounds(latlngs, { padding: [40, 40] });
 
-      // 통계 오버레이 업데이트
       updateMapStats(stats, lang);
 
-      // 고도 그래프 (의미 있을 때만)
       if (stats.elev_range > 30) {
-        renderElevationChart(points, stats, lang);
+        renderElevationChart(points, stats, lang, courseColor);
       } else {
         const elevContainer = document.getElementById('elevChart');
         if (elevContainer) elevContainer.style.display = 'none';
@@ -226,13 +195,11 @@ window.BusanRunnerMap = (function() {
     `;
   }
 
-  // 고도 그래프 (SVG로 직접, 라이브러리 없이)
-  function renderElevationChart(points, stats, lang) {
+  function renderElevationChart(points, stats, lang, color) {
     const container = document.getElementById('elevChart');
     if (!container) return;
     container.style.display = '';
     
-    // 다운샘플 (200개로)
     const target = 200;
     const step = Math.max(1, Math.floor(points.length / target));
     const sampled = [];
@@ -249,35 +216,34 @@ window.BusanRunnerMap = (function() {
     const eRange = stats.max_ele - minE || 1;
     const dRange = stats.distance_m || 1;
 
-    // path 데이터
     let d = 'M ';
     sampled.forEach((p, i) => {
       const x = padX + (p.dist / dRange) * innerW;
       const y = padY + (1 - (p.ele - minE) / eRange) * innerH;
       d += `${i === 0 ? '' : 'L '}${x.toFixed(1)} ${y.toFixed(1)} `;
     });
-    // 영역 채우기 위해 끝점 → 바닥 → 시작점
     let dArea = d + `L ${(padX + innerW).toFixed(1)} ${(padY + innerH).toFixed(1)} L ${padX.toFixed(1)} ${(padY + innerH).toFixed(1)} Z`;
 
     const labelMin = lang === 'en' ? 'min' : '최저';
     const labelMax = lang === 'en' ? 'max' : '최고';
+    const gradId = 'elevGrad_' + Math.random().toString(36).slice(2, 8);
 
     container.innerHTML = `
       <div class="elev-chart-head">
-        <div class="elev-chart-label">${lang === 'en' ? '── ELEVATION' : '── 고도'}</div>
+        <div class="elev-chart-label" style="color:${color}">${lang === 'en' ? '── ELEVATION' : '── 고도'}</div>
         <div class="elev-chart-meta">
           ${labelMin} ${stats.min_ele.toFixed(0)}m · ${labelMax} ${stats.max_ele.toFixed(0)}m
         </div>
       </div>
       <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="elev-svg">
         <defs>
-          <linearGradient id="elevGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#FF6B4A" stop-opacity="0.4" />
-            <stop offset="100%" stop-color="#FF6B4A" stop-opacity="0.05" />
+          <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${color}" stop-opacity="0.4" />
+            <stop offset="100%" stop-color="${color}" stop-opacity="0.05" />
           </linearGradient>
         </defs>
-        <path d="${dArea}" fill="url(#elevGrad)" />
-        <path d="${d}" fill="none" stroke="#FF6B4A" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="${dArea}" fill="url(#${gradId})" />
+        <path d="${d}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" />
       </svg>
     `;
   }

@@ -1,9 +1,11 @@
 /* ============================================================
-   부산러너 v7 - 메인 앱 로직
-   - courses.json 동적 로드
-   - Supabase 통합 (좋아요/댓글/사진)
-   - 자동 이미지 압축
-   - 본인 콘텐츠 삭제
+   부산러너 v8 - 메인 앱 로직
+   - courses.json + DB 사진 통합 로드
+   - 카드 사진 캐러셀 (수동 스와이프)
+   - 코스별 색상 시스템 (CSS 변수)
+   - 통계 그리드 4칸
+   - Supabase 통합
+   - 자동 이미지 압축, 본인 콘텐츠 삭제
    - 다국어 (KO/EN)
    ============================================================ */
 'use strict';
@@ -29,20 +31,19 @@ const I18N = {
     'courses.eyebrow': '── 코스 컬렉션',
     'courses.title.l1': 'SELECT',
     'courses.title.l2': 'YOUR <em>route.</em>',
-    'courses.desc': '매주 한 코스씩 공개됩니다. 첫 번째는 옛 동해남부선이 지나던 미포-송정 구간.',
+    'courses.desc': '매주 한 코스씩 공개됩니다. 미포-송정과 동백섬 두 시그니처 코스로 시작합니다.',
     'community.eyebrow': '── ABOUT',
     'community.quote.l1': '코스를 발견하고,',
     'community.quote.l2': '같이 달릴 사람',
     'community.quote.l3': '을 만나는 곳.',
     'detail.hero.tag': 'SIGNATURE<br>COURSE',
-    'detail.hero.min': '분',
     'engagement.views': '조회',
     'engagement.photos': '사진',
     'engagement.comments': '후기',
     'detail.story.eyebrow': '── 이 코스의 이야기',
     'detail.route.eyebrow': '── 코스',
-    'detail.route.title': '3개의 정거장,<br>하나의 해안선.',
-    'detail.route.hint': '지도의 <b>코랄색 마커</b>를 누르면 정거장 정보가 나와요.',
+    'detail.route.title': '코스 트랙.',
+    'detail.route.hint': '지도의 <b>마커</b>를 누르면 정거장 정보가 나와요.',
     'detail.practical.eyebrow': '── 알아두기',
     'detail.practical.title': '알아두면 좋은 것들.',
     'detail.restroom.eyebrow': '── 화장실 · RESTROOMS',
@@ -90,9 +91,13 @@ const I18N = {
     'confirm.yes': '삭제',
     'confirm.photo.msg': '이 사진을 삭제합니다.',
     'confirm.comment.msg': '이 댓글을 삭제합니다.',
-    'easy': '초급',
+    'stat.distance': 'KM',
+    'stat.duration': '분',
+    'stat.difficulty': '난이도',
+    'stat.likes': '좋아요',
     'mine': 'MINE',
     'soon': 'SOON',
+    'min.short': '분',
   },
   en: {
     'hero.tag': 'WHERE RUNNERS GATHER · 2026',
@@ -106,26 +111,25 @@ const I18N = {
     'courses.eyebrow': '── COURSE COLLECTION',
     'courses.title.l1': 'SELECT',
     'courses.title.l2': 'YOUR <em>route.</em>',
-    'courses.desc': 'A new course every week. We start with the old Donghae railway path from Mipo to Songjeong.',
+    'courses.desc': 'A new course every week. We start with two signatures: Mipo-Songjeong and Dongbaek Loop.',
     'community.eyebrow': '── ABOUT',
     'community.quote.l1': 'Find the route,',
     'community.quote.l2': 'meet the runners',
     'community.quote.l3': '.',
     'detail.hero.tag': 'SIGNATURE<br>COURSE',
-    'detail.hero.min': 'MIN',
     'engagement.views': 'views',
     'engagement.photos': 'photos',
     'engagement.comments': 'reviews',
     'detail.story.eyebrow': '── THE STORY',
     'detail.route.eyebrow': '── THE ROUTE',
-    'detail.route.title': 'Three stations,<br>one coastline.',
-    'detail.route.hint': 'Tap the <b>coral markers</b> on the map for station info.',
+    'detail.route.title': 'Course track.',
+    'detail.route.hint': 'Tap the <b>markers</b> on the map for station info.',
     'detail.practical.eyebrow': '── PRACTICAL',
     'detail.practical.title': 'Things worth knowing.',
     'detail.restroom.eyebrow': '── RESTROOMS',
     'detail.restroom.title': "A runner's <em>essentials.</em>",
     'detail.photos.eyebrow': '── PHOTOS',
-    'detail.photos.title': 'Through a <em>runner\'s eye.</em>',
+    'detail.photos.title': "Through a <em>runner's eye.</em>",
     'detail.photos.upload': 'Add Photo',
     'gallery.empty': 'No photos yet.<br>Be the first to share a view.',
     'detail.comments.eyebrow': '── REVIEWS',
@@ -167,9 +171,13 @@ const I18N = {
     'confirm.yes': 'Delete',
     'confirm.photo.msg': 'This photo will be removed.',
     'confirm.comment.msg': 'This comment will be removed.',
-    'easy': 'EASY',
+    'stat.distance': 'KM',
+    'stat.duration': 'MIN',
+    'stat.difficulty': 'LEVEL',
+    'stat.likes': 'LIKES',
     'mine': 'MINE',
     'soon': 'SOON',
+    'min.short': 'min',
   },
 };
 
@@ -179,7 +187,7 @@ function t(key) {
 }
 
 /* ============== STATE ============== */
-const STORAGE_KEY = 'busan_runner_v7';
+const STORAGE_KEY = 'busan_runner_v8';
 const COLORS = ['#FF6B4A', '#1B3A5C', '#2E8B57', '#9C6ADE', '#E8A317', '#3B82F6', '#EC4899', '#0F766E'];
 
 function getSessionId() {
@@ -194,8 +202,9 @@ const SESSION_ID = getSessionId();
 
 const state = {
   user: { nick: null, color: COLORS[0] },
-  courses: [],          // courses.json에서 로드
-  currentCourse: null,  // 현재 보고 있는 코스
+  courses: [],
+  cardPhotosByCourse: {},  // { courseId: { card_1: [...], card_2: [...], ..., hero: [...] } }
+  currentCourse: null,
   photos: [],
   comments: [],
   likes: 0,
@@ -264,7 +273,6 @@ function applyI18n() {
   document.querySelectorAll('.lang-toggle button').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.lang === currentLang);
   });
-  // 데이터 의존 영역 다시 그리기
   renderCourseGrid();
   if (state.currentCourse) renderDetail(state.currentCourse);
   renderGallery();
@@ -283,6 +291,21 @@ function setupLangToggle() {
   });
 }
 
+/* ============== COURSE COLOR SYSTEM ============== */
+function applyCourseColor(course) {
+  const root = document.documentElement;
+  const color = course?.color?.primary || '#FF6B4A';
+  const soft = course?.color?.soft || '#FFE9E3';
+  root.style.setProperty('--course-color', color);
+  root.style.setProperty('--course-soft', soft);
+}
+
+function resetCourseColor() {
+  const root = document.documentElement;
+  root.style.setProperty('--course-color', '#FF6B4A');
+  root.style.setProperty('--course-soft', '#FFE9E3');
+}
+
 /* ============== DATA LOADING ============== */
 async function loadCourses() {
   try {
@@ -296,20 +319,65 @@ async function loadCourses() {
   }
 }
 
+async function loadCardPhotos() {
+  // 모든 코스의 카드/히어로 사진을 한 번에 가져옴
+  try {
+    const { data, error } = await sb.from('course_card_photos')
+      .select('*')
+      .order('display_order', { ascending: true });
+    if (error) { console.warn('card photos load:', error); return; }
+    
+    const grouped = {};
+    (data || []).forEach(p => {
+      if (!grouped[p.course_id]) grouped[p.course_id] = {};
+      if (!grouped[p.course_id][p.slot]) grouped[p.course_id][p.slot] = [];
+      grouped[p.course_id][p.slot].push(p);
+    });
+    state.cardPhotosByCourse = grouped;
+    console.log('📸 DB 카드 사진 로드:', Object.keys(grouped).length, '코스');
+  } catch (e) {
+    console.warn('card photos:', e);
+  }
+}
+
+// 코스의 카드 사진들 가져오기 (DB 우선, 없으면 정적)
+function getCardImages(course) {
+  const dbPhotos = state.cardPhotosByCourse[course.id];
+  const slots = ['card_1', 'card_2', 'card_3'];
+  const images = [];
+  
+  for (const slot of slots) {
+    if (dbPhotos && dbPhotos[slot] && dbPhotos[slot].length) {
+      images.push(dbPhotos[slot][0].public_url);
+    }
+  }
+  
+  // DB에 없으면 정적 폴백
+  if (!images.length && course.card_images && course.card_images.length) {
+    return course.card_images;
+  }
+  
+  return images.length ? images : (course.card_images || []);
+}
+
+function getHeroImage(course) {
+  const dbPhotos = state.cardPhotosByCourse[course.id];
+  if (dbPhotos && dbPhotos.hero && dbPhotos.hero.length) {
+    return dbPhotos.hero[0].public_url;
+  }
+  return course.hero_image || (course.card_images && course.card_images[0]) || '';
+}
+
 /* ============== COURSE GRID (랜딩) ============== */
 function renderCourseGrid() {
   const grid = document.getElementById('courseGrid');
   if (!grid || !state.courses.length) return;
 
   grid.innerHTML = state.courses.map(c => {
-    // 위쪽: 영문 슬로건 (브랜드처럼 언어 무관 고정)
     const titleSlogan = c.name?.en || '';
-    // 아래쪽: 현재 언어에 맞는 라우트
-    // - 한국어 모드: 한글 라우트 (예: 미포 → 청사포 → 송정)
-    // - 영어 모드: 영문 라우트 (없으면 빈칸 — 영문 슬로건이 이미 위에 있어서 OK)
     let titleRoute;
     if (currentLang === 'en') {
-      titleRoute = c.subtitle_en || ''; // 영문 모드에서 영문 라우트 없으면 빈칸
+      titleRoute = c.subtitle_en || '';
     } else {
       titleRoute = c.subtitle_ko || c.name?.ko || '';
     }
@@ -318,21 +386,53 @@ function renderCourseGrid() {
     const diff = c.difficulty?.[currentLang] || c.difficulty?.ko || '';
     let meta;
     if (c.ready) {
-      meta = `${dist} KM · ${dur} ${t('detail.hero.min')} · ${diff}`;
+      meta = `${dist} KM · ${dur} ${t('min.short')} · ${diff}`;
     } else {
       meta = `${dist} KM · COMING SOON`;
     }
-    const photo = c.card_image;
+    
+    const cardImages = c.ready ? getCardImages(c) : [];
+    const courseColor = c.color?.primary || '#FF6B4A';
+    const numColor = c.ready ? courseColor : 'rgba(255,255,255,0.18)';
+
+    let mediaHtml;
+    if (cardImages.length > 1) {
+      // 캐러셀
+      mediaHtml = `
+        <div class="course-card-carousel" data-carousel-id="${escapeHtml(c.id)}">
+          ${cardImages.map((img, i) => `
+            <div class="course-card-slide">
+              <img src="${escapeHtml(img)}" alt="${escapeHtml(titleSlogan)} ${i+1}" loading="lazy" />
+            </div>
+          `).join('')}
+        </div>
+        <div class="carousel-dots" data-dots-for="${escapeHtml(c.id)}">
+          ${cardImages.map((_, i) => `<div class="carousel-dot ${i === 0 ? 'active' : ''}"></div>`).join('')}
+        </div>
+      `;
+    } else if (cardImages.length === 1) {
+      // 단일 이미지
+      mediaHtml = `
+        <div class="course-card-carousel">
+          <div class="course-card-slide">
+            <img src="${escapeHtml(cardImages[0])}" alt="${escapeHtml(titleSlogan)}" loading="lazy" />
+          </div>
+        </div>
+      `;
+    } else {
+      // 그라데이션 폴백
+      mediaHtml = '<div class="course-card-bg"></div>';
+    }
+
+    const arrowStyle = c.ready ? `style="background:${courseColor}"` : '';
 
     return `
       <div class="course-card ${c.featured ? 'featured' : ''} ${c.ready ? '' : 'locked'}"
            data-ready="${c.ready}" data-course-id="${escapeHtml(c.id)}">
-        ${photo
-          ? `<div class="course-card-photo"><img src="${escapeHtml(photo)}" alt="${escapeHtml(titleSlogan)}" loading="lazy" /></div>`
-          : '<div class="course-card-bg"></div>'}
-        <div class="course-card-num">${escapeHtml(c.num)}</div>
+        ${mediaHtml}
+        <div class="course-card-num" style="color:${numColor}">${escapeHtml(c.num)}</div>
         ${c.ready
-          ? `<div class="course-card-arrow"><span class="icon">arrow_forward</span></div>`
+          ? `<div class="course-card-arrow" ${arrowStyle}><span class="icon">arrow_forward</span></div>`
           : `<div class="course-card-coming"><span class="icon">schedule</span>${t('soon')}</div>`}
         <div class="course-card-content">
           <div class="course-card-tag">${escapeHtml(c.tag || '')}</div>
@@ -344,8 +444,11 @@ function renderCourseGrid() {
     `;
   }).join('');
 
+  // 클릭 → 상세
   grid.querySelectorAll('.course-card').forEach(card => {
-    card.addEventListener('click', () => {
+    card.addEventListener('click', (e) => {
+      // 캐러셀 스와이프 중이면 무시
+      if (card._isScrolling) return;
       if (card.dataset.ready === 'true') {
         const id = card.dataset.courseId;
         const course = state.courses.find(c => c.id === id);
@@ -354,6 +457,31 @@ function renderCourseGrid() {
         showToast(t('toast.coming'), 'schedule');
       }
     });
+  });
+
+  // 캐러셀 인디케이터 동기화
+  grid.querySelectorAll('.course-card-carousel').forEach(carousel => {
+    const id = carousel.dataset.carouselId;
+    if (!id) return;
+    const dotsContainer = grid.querySelector(`[data-dots-for="${id}"]`);
+    if (!dotsContainer) return;
+    const dots = dotsContainer.querySelectorAll('.carousel-dot');
+    
+    let scrollTimer;
+    carousel.addEventListener('scroll', () => {
+      const card = carousel.closest('.course-card');
+      if (card) card._isScrolling = true;
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => {
+        if (card) card._isScrolling = false;
+      }, 100);
+      
+      const slideWidth = carousel.clientWidth;
+      const idx = Math.round(carousel.scrollLeft / slideWidth);
+      dots.forEach((d, i) => {
+        d.classList.toggle('active', i === idx);
+      });
+    }, { passive: true });
   });
 
   // 헤더 통계 갱신
@@ -369,10 +497,14 @@ function renderCourseGrid() {
 function renderDetail(course) {
   if (!course) return;
 
+  // 코스 색상 적용
+  applyCourseColor(course);
+
   // 히어로
   const photo = document.getElementById('detailHeroPhoto');
   if (photo) {
-    photo.src = course.hero_image || course.card_image || '';
+    const heroImg = getHeroImage(course);
+    photo.src = heroImg;
     photo.alt = course.name?.[currentLang] || '';
   }
   document.getElementById('detailHeroNum').textContent = course.num;
@@ -380,16 +512,8 @@ function renderDetail(course) {
   document.getElementById('detailHeroSubtitle').textContent =
     currentLang === 'en' ? (course.subtitle_en || '') : (course.subtitle_ko || '');
 
-  const stats = document.getElementById('detailHeroStats');
-  if (stats) {
-    const diff = course.difficulty?.[currentLang] || course.difficulty?.ko || '';
-    stats.innerHTML = `
-      <span><b>${course.distance_km}</b> KM</span>
-      <span><b>${course.duration_min}</b> <span>${t('detail.hero.min')}</span></span>
-      <span><b>${escapeHtml(diff)}</b></span>
-      <span><b>★ <span id="likeStarCount">${state.likes}</span></b></span>
-    `;
-  }
+  // 통계 그리드 4칸 ⭐
+  renderStatsGrid(course);
 
   // 스토리
   const storyTitle = document.getElementById('storyTitle');
@@ -439,6 +563,33 @@ function renderDetail(course) {
   }
 }
 
+/* ============== STATS GRID 4칸 ⭐ ============== */
+function renderStatsGrid(course) {
+  const grid = document.getElementById('detailStatsGrid');
+  if (!grid) return;
+  
+  const diff = course.difficulty?.[currentLang] || course.difficulty?.ko || '';
+  
+  grid.innerHTML = `
+    <div class="detail-stat-cell">
+      <div class="detail-stat-num">${course.distance_km}</div>
+      <div class="detail-stat-lbl">${t('stat.distance')}</div>
+    </div>
+    <div class="detail-stat-cell">
+      <div class="detail-stat-num">${course.duration_min}</div>
+      <div class="detail-stat-lbl">${t('stat.duration')}</div>
+    </div>
+    <div class="detail-stat-cell">
+      <div class="detail-stat-num-text">${escapeHtml(diff)}</div>
+      <div class="detail-stat-lbl">${t('stat.difficulty')}</div>
+    </div>
+    <div class="detail-stat-cell">
+      <div class="detail-stat-num">★ <span id="likeStarCount">${state.likes}</span></div>
+      <div class="detail-stat-lbl">${t('stat.likes')}</div>
+    </div>
+  `;
+}
+
 /* ============== SUPABASE QUERIES ============== */
 async function fetchLikes() {
   try {
@@ -475,6 +626,9 @@ async function toggleLike() {
     }
   }
   renderEngagement();
+  // 별점도 갱신
+  const star = document.getElementById('likeStarCount');
+  if (star) star.textContent = state.likes;
 }
 
 async function fetchComments() {
@@ -602,6 +756,9 @@ async function refreshAll() {
   renderEngagement();
   renderGallery();
   renderComments();
+  // 별점 갱신
+  const star = document.getElementById('likeStarCount');
+  if (star) star.textContent = state.likes;
 }
 
 /* ============== ENGAGEMENT ============== */
@@ -610,12 +767,10 @@ function renderEngagement() {
   const p = document.getElementById('photoCount');
   const c = document.getElementById('commentCount');
   const l = document.getElementById('likeCount');
-  const s = document.getElementById('likeStarCount');
   if (v) v.textContent = state.views;
   if (p) p.textContent = state.photos.length;
   if (c) c.textContent = state.comments.length;
   if (l) l.textContent = state.likes;
-  if (s) s.textContent = state.likes;
   const likeBtn = document.getElementById('likeBtn');
   if (likeBtn) {
     if (state.liked) {
@@ -962,6 +1117,7 @@ async function go(view, course) {
     refreshAll();
   } else {
     state.currentCourse = null;
+    resetCourseColor();
     if (window.BusanRunnerMap) window.BusanRunnerMap.destroy();
     history.pushState({ view }, '', '#');
     fetchTotalRunners().then(() => {
@@ -993,9 +1149,7 @@ function setupScroll() {
 /* ============== INIT ============== */
 async function init() {
   loadUserState();
-
-  // 데이터 로드 (병렬)
-  await loadCourses();
+  await Promise.all([loadCourses(), loadCardPhotos()]);
 
   applyI18n();
   setupLangToggle();
@@ -1010,7 +1164,6 @@ async function init() {
     ensureUser(() => openModal('photoModal'));
   });
 
-  // Toast 키 바인딩
   document.querySelectorAll('[data-toast-key]').forEach(el => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
@@ -1020,12 +1173,10 @@ async function init() {
     });
   });
 
-  // 모달 외부 클릭 닫기
   document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', (e) => { if (e.target === m) closeModal(m.id); });
   });
 
-  // ESC
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       document.querySelectorAll('.modal-overlay.open').forEach(m => closeModal(m.id));
@@ -1038,13 +1189,12 @@ async function init() {
     }
   });
 
-  // 초기 RUNNERS 카운트
   fetchTotalRunners().then(() => {
     const el = document.getElementById('totalRunners');
     if (el) el.textContent = state.totalRunners;
   });
 
-  // URL 해시로 상세 진입 처리
+  // 해시 라우팅
   const hash = location.hash.slice(1);
   if (hash) {
     const course = state.courses.find(c => c.id === hash);
@@ -1052,7 +1202,6 @@ async function init() {
   }
 }
 
-// 닉/모달 닫기 글로벌 노출 (HTML onclick 호환)
 window.closeModal = closeModal;
 window.closeLightbox = closeLightbox;
 

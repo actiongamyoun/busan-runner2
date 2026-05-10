@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "courses": [
     {
       "id": "mipo-songjeong",
@@ -7,6 +7,11 @@
       "ready": true,
       "featured": true,
       "tag": "BLUE LINE PARK",
+      "color": {
+        "primary": "#FF6B4A",
+        "soft": "#FFE9E3",
+        "name": "coral"
+      },
       "name": {
         "en": "MIPO TO SEA",
         "ko": "미포 → 청사포 → 송정"
@@ -21,8 +26,12 @@
         "en": "EASY"
       },
       "elev_gain_m": 41,
-      "card_image": "images/mipo-songjeong/card.jpg",
-      "hero_image": "images/mipo-songjeong/card.jpg",
+      "card_images": [
+        "images/mipo-songjeong/card1.jpg",
+        "images/mipo-songjeong/card2.jpg",
+        "images/mipo-songjeong/card3.jpg"
+      ],
+      "hero_image": "images/mipo-songjeong/hero.jpg",
       "gpx": "data/tracks/mipo-songjeong.gpx",
       "story": {
         "ko": "2013년까지 동해남부선 열차가 다녔던 자리. 폐선 부지가 산책로가 된 지 8년, 이제 이 길은 부산 러너들의 가장 사랑받는 시그니처 코스가 되었다. 해변열차가 천천히 지나가고, 그 옆을 러너들의 발자국이 채운다.",
@@ -38,14 +47,8 @@
           "num": "01",
           "lat": 35.1600,
           "lon": 129.1708,
-          "name": {
-            "ko": "미포 정거장",
-            "en": "Mipo Station"
-          },
-          "name_secondary": {
-            "ko": "Mipo",
-            "en": "미포"
-          },
+          "name": { "ko": "미포 정거장", "en": "Mipo Station" },
+          "name_secondary": { "ko": "Mipo", "en": "미포" },
           "desc": {
             "ko": "출발점. 동백섬과 광안대교가 보이는 자리. 일출 명소.",
             "en": "Starting point. Dongbaek Island and Gwangan Bridge in view. Famous sunrise spot."
@@ -56,14 +59,8 @@
           "num": "02",
           "lat": 35.1620,
           "lon": 129.1855,
-          "name": {
-            "ko": "청사포 정거장",
-            "en": "Cheongsapo Station"
-          },
-          "name_secondary": {
-            "ko": "Cheongsapo",
-            "en": "청사포"
-          },
+          "name": { "ko": "청사포 정거장", "en": "Cheongsapo Station" },
+          "name_secondary": { "ko": "Cheongsapo", "en": "청사포" },
           "desc": {
             "ko": "슬램덩크 건널목. 노을이 가장 아름다운 곳. 다릿돌전망대 인근.",
             "en": "The Slam Dunk crossing. Most beautiful sunset on the coast. Near Daritdol Skywalk."
@@ -74,14 +71,8 @@
           "num": "03",
           "lat": 35.1805,
           "lon": 129.2000,
-          "name": {
-            "ko": "송정 정거장",
-            "en": "Songjeong Station"
-          },
-          "name_secondary": {
-            "ko": "Songjeong",
-            "en": "송정"
-          },
+          "name": { "ko": "송정 정거장", "en": "Songjeong Station" },
+          "name_secondary": { "ko": "Songjeong", "en": "송정" },
           "desc": {
             "ko": "도착점. 서핑의 성지 송정해수욕장. 코스 끝에서 바다.",
             "en": "Endpoint. Korea's surfing mecca, Songjeong Beach. The sea waits at the finish."
@@ -167,18 +158,164 @@
       ]
     },
     {
-      "id": "gwangalli",
+      "id": "dongbaek",
       "num": "02",
+      "ready": true,
+      "featured": false,
+      "tag": "ISLAND LOOP",
+      "color": {
+        "primary": "#0E7C7B",
+        "soft": "#D7EFEE",
+        "name": "teal"
+      },
+      "name": {
+        "en": "DONGBAEK LOOP",
+        "ko": "동백섬 루프"
+      },
+      "title_en": "AROUND\nDONGBAEK.",
+      "subtitle_ko": "해운대 → 동백섬 한 바퀴",
+      "subtitle_en": "Haeundae → Dongbaek Island Loop",
+      "distance_km": 3.4,
+      "duration_min": 20,
+      "difficulty": {
+        "ko": "초급",
+        "en": "EASY"
+      },
+      "elev_gain_m": 69,
+      "card_images": [
+        "images/dongbaek/card1.jpg"
+      ],
+      "hero_image": "images/dongbaek/hero.jpg",
+      "gpx": "data/tracks/dongbaek.gpx",
+      "story": {
+        "ko": "해운대 백사장에서 시작해 동백섬을 한 바퀴 도는 짧지만 풍성한 코스. 누리마루 APEC하우스, 인어상, 해안 절벽길까지 — 부산의 정수가 3km 안에 모두 담겨 있다. 광안대교 뷰는 덤.",
+        "en": "Starting from Haeundae Beach and looping around Dongbaek Island — short but full of essence. Nuri Maru APEC House, the mermaid statue, coastal cliff paths — the heart of Busan in 3km. Gwangan Bridge view is a bonus."
+      },
+      "story_title": {
+        "ko": "한 바퀴, <em>부산의 모든 것.</em>",
+        "en": "One loop, <em>all of Busan.</em>"
+      },
+      "stops": [
+        {
+          "id": "haeundae-entry",
+          "num": "01",
+          "lat": 35.1593,
+          "lon": 129.1698,
+          "name": { "ko": "해운대 입구", "en": "Haeundae Entry" },
+          "name_secondary": { "ko": "Haeundae", "en": "해운대" },
+          "desc": {
+            "ko": "출발점. 해운대 백사장 서쪽 끝. 동백섬으로 진입하는 자리.",
+            "en": "Starting point. The west end of Haeundae Beach. Where Dongbaek Island begins."
+          }
+        },
+        {
+          "id": "nurimaru",
+          "num": "02",
+          "lat": 35.1530,
+          "lon": 129.1500,
+          "name": { "ko": "누리마루 APEC하우스", "en": "Nuri Maru APEC House" },
+          "name_secondary": { "ko": "Nurimaru", "en": "누리마루" },
+          "desc": {
+            "ko": "2005년 APEC 정상회의장. 광안대교가 가장 잘 보이는 포인트.",
+            "en": "2005 APEC Summit venue. Best viewpoint for Gwangan Bridge."
+          }
+        },
+        {
+          "id": "mermaid",
+          "num": "03",
+          "lat": 35.1556,
+          "lon": 129.1490,
+          "name": { "ko": "인어상", "en": "Mermaid Statue" },
+          "name_secondary": { "ko": "Mermaid", "en": "인어상" },
+          "desc": {
+            "ko": "황옥공주 전설의 인어상. 해안 절벽길의 핵심 포토 스팟.",
+            "en": "Princess Hwangok mermaid legend. Iconic photo spot on the cliff path."
+          }
+        }
+      ],
+      "practical": {
+        "time": {
+          "label": { "ko": "추천 시간", "en": "RECOMMENDED TIME" },
+          "value": { "ko": "<em>이른 아침</em> 06:00 — 09:00", "en": "<em>Early morning</em> 06:00 — 09:00" },
+          "sub": {
+            "ko": "관광객 적은 새벽이 베스트. 일출 직후 빛이 가장 아름다움.",
+            "en": "Best in early morning before tourists arrive. Light right after sunrise is magical."
+          }
+        },
+        "start": {
+          "label": { "ko": "시작점", "en": "STARTING POINT" },
+          "value": { "ko": "해운대 백사장 서쪽 끝", "en": "West end of Haeundae Beach" },
+          "sub": {
+            "ko": "지하철 2호선 동백역 1번 출구 → 도보 5분",
+            "en": "Subway Line 2, Dongbaek Stn. Exit 1 → 5 min walk"
+          }
+        },
+        "parking": {
+          "label": { "ko": "주차", "en": "PARKING" },
+          "value": { "ko": "동백공원 주차장", "en": "Dongbaek Park Parking" },
+          "sub": {
+            "ko": "시간당 1,200원 / 주말 매우 혼잡",
+            "en": "₩1,200/hour · Very busy on weekends"
+          }
+        },
+        "cautions": {
+          "label": { "ko": "주의사항", "en": "CAUTIONS" },
+          "value": {
+            "ko": "관광객 많은 시간대(11-17시) 피하기 · 절벽 구간 일부 좁음 · 비 오는 날 미끄러움",
+            "en": "Avoid tourist hours (11-17) · Some narrow cliff sections · Slippery when wet"
+          }
+        },
+        "nearby": {
+          "label": { "ko": "주변 편의시설", "en": "NEARBY" },
+          "value": {
+            "ko": "해운대 시내 카페/식당 다수, 더베이101, 그랜드호텔",
+            "en": "Many cafés and restaurants in Haeundae, The Bay 101, Grand Hotel"
+          }
+        }
+      },
+      "restrooms": [
+        {
+          "icon": "wc",
+          "name": { "ko": "해운대 백사장 공중화장실", "en": "Haeundae Beach Restroom" },
+          "dist": { "ko": "시작점 · 0 KM", "en": "START · 0 KM" },
+          "hours": { "ko": "24시간 운영", "en": "24 HOURS" },
+          "always": true
+        },
+        {
+          "icon": "wc",
+          "name": { "ko": "동백섬 화장실", "en": "Dongbaek Island Restroom" },
+          "dist": { "ko": "1.5 KM · 누리마루 인근", "en": "1.5 KM · Near Nurimaru" },
+          "hours": { "ko": "06:00 — 22:00", "en": "06:00 — 22:00" },
+          "always": false
+        },
+        {
+          "icon": "wc",
+          "name": { "ko": "동백공원 화장실", "en": "Dongbaek Park Restroom" },
+          "dist": { "ko": "도착점 · 3.4 KM", "en": "END · 3.4 KM" },
+          "hours": { "ko": "24시간 운영", "en": "24 HOURS" },
+          "always": true
+        },
+        {
+          "icon": "local_cafe",
+          "name": { "ko": "더베이101 카페", "en": "The Bay 101 Café" },
+          "dist": { "ko": "도착 후 · 3.6 KM", "en": "After finish · 3.6 KM" },
+          "hours": { "ko": "11:00 — 24:00", "en": "11:00 — 24:00" },
+          "always": false
+        }
+      ]
+    },
+    {
+      "id": "gwangalli",
+      "num": "03",
       "ready": false,
       "tag": "NIGHT VIEW",
       "name": { "en": "GWANGALLI ARC", "ko": "광안리 해변 아치" },
       "distance_km": 6.5,
-      "duration_min": null,
       "difficulty": { "ko": "준비중", "en": "COMING SOON" }
     },
     {
       "id": "igidae",
-      "num": "03",
+      "num": "04",
       "ready": false,
       "tag": "CLIFF WALK",
       "name": { "en": "IGIDAE COAST", "ko": "이기대 해안" },
@@ -187,7 +324,7 @@
     },
     {
       "id": "nakdong",
-      "num": "04",
+      "num": "05",
       "ready": false,
       "tag": "RIVERSIDE",
       "name": { "en": "NAKDONG RIVER", "ko": "낙동강 하구" },
@@ -196,7 +333,7 @@
     },
     {
       "id": "yeongdo",
-      "num": "05",
+      "num": "06",
       "ready": false,
       "tag": "ISLAND",
       "name": { "en": "YEONGDO LOOP", "ko": "영도 절영해안" },
@@ -205,7 +342,7 @@
     },
     {
       "id": "suyeong",
-      "num": "06",
+      "num": "07",
       "ready": false,
       "tag": "CHERRY BLOSSOM",
       "name": { "en": "SUYEONG BLOOM", "ko": "수영강 벚꽃길" },
@@ -214,7 +351,7 @@
     },
     {
       "id": "dadaepo",
-      "num": "07",
+      "num": "08",
       "ready": false,
       "tag": "SUNSET",
       "name": { "en": "DADAEPO SUNSET", "ko": "다대포 일몰" },
@@ -223,20 +360,11 @@
     },
     {
       "id": "songdo",
-      "num": "08",
+      "num": "09",
       "ready": false,
       "tag": "SKYWALK",
       "name": { "en": "SONGDO RIDGE", "ko": "송도 해안볼레길" },
       "distance_km": 5.1,
-      "difficulty": { "ko": "준비중", "en": "COMING SOON" }
-    },
-    {
-      "id": "oryukdo",
-      "num": "09",
-      "ready": false,
-      "tag": "CLIFF",
-      "name": { "en": "OEDO TRAIL", "ko": "오륙도 트레일" },
-      "distance_km": 4.0,
       "difficulty": { "ko": "준비중", "en": "COMING SOON" }
     },
     {
