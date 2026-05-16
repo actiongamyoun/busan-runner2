@@ -48,10 +48,17 @@ const I18N = {
     'detail.practical.title': '알아두면 좋은 것들.',
     'detail.restroom.eyebrow': '── 화장실 · RESTROOMS',
     'detail.restroom.title': '러너의 <em>필수 정보.</em>',
+    'detail.restroom.hint': '좌우로 스와이프 해보세요 →',
+    'detail.reviews.eyebrow': '── REVIEWS · 후기',
+    'detail.reviews.title': '달려본 사람들의 <em>한 마디.</em>',
     'detail.photos.eyebrow': '── 사진 · 러너의 시선',
     'detail.photos.title': '이 코스의 <em>풍경.</em>',
     'detail.photos.upload': '사진 올리기',
     'gallery.empty': '아직 사진이 없어요.<br>첫 번째 풍경을 남겨보세요.',
+    'reviews.empty': '아직 후기가 없어요.<br>이 코스의 첫 발자국이 되어보세요.',
+    'event.scroll': '인증하러 가기',
+    'event.section.photos': '이벤트 인증 사진 · 러닝 기록 스크린샷 + 코스 인증샷',
+    'event.section.comments': '이벤트 인증 댓글 · 완주 후기를 남겨주세요',
     'detail.comments.eyebrow': '── 후기 · COMMENTS',
     'detail.comments.title': '달려본 사람들의 <em>한 마디.</em>',
     'detail.comments.placeholder': '이 코스 어떠셨어요?',
@@ -128,10 +135,17 @@ const I18N = {
     'detail.practical.title': 'Things worth knowing.',
     'detail.restroom.eyebrow': '── RESTROOMS',
     'detail.restroom.title': "A runner's <em>essentials.</em>",
+    'detail.restroom.hint': 'Swipe left/right →',
+    'detail.reviews.eyebrow': '── REVIEWS',
+    'detail.reviews.title': 'From those who <em>ran it.</em>',
     'detail.photos.eyebrow': '── PHOTOS',
     'detail.photos.title': "Through a <em>runner's eye.</em>",
     'detail.photos.upload': 'Add Photo',
     'gallery.empty': 'No photos yet.<br>Be the first to share a view.',
+    'reviews.empty': 'No reviews yet.<br>Leave the first footprint on this course.',
+    'event.scroll': 'Submit Below',
+    'event.section.photos': 'Event Submission · Run tracking screenshot + photo',
+    'event.section.comments': 'Event Submission · Share your finish review',
     'detail.comments.eyebrow': '── REVIEWS',
     'detail.comments.title': 'From those who <em>ran it.</em>',
     'detail.comments.placeholder': 'How was this course?',
@@ -394,6 +408,28 @@ function getTagline(course, lang) {
   return '';
 }
 
+// 코스에 활성 이벤트가 있는지 확인
+function isCourseEventActive(course) {
+  return !!(course && course.event && course.event.active === true);
+}
+
+// 이벤트 정보 가져오기 (lang별)
+function getEventLocalized(course, lang) {
+  if (!isCourseEventActive(course)) return null;
+  const ev = course.event;
+  const pick = (field) => {
+    if (!ev[field]) return '';
+    return ev[field][lang] || ev[field].ko || '';
+  };
+  return {
+    title: pick('title'),
+    period: pick('period'),
+    tag: pick('tag') || 'EVENT',
+    prizes: pick('prizes'),
+    instructions: pick('instructions'),
+  };
+}
+
 // 코스의 카드 사진들 가져오기 (DB 우선, 없으면 정적)
 // 메인 카드용 (1장 고정) - card_1 우선, 없으면 정적 폴백
 function getMainCardImage(course) {
@@ -481,15 +517,18 @@ function renderCourseGrid() {
     }
 
     const arrowStyle = c.ready ? `style="background:${courseColor}"` : '';
+    const hasEvent = isCourseEventActive(c);
 
     return `
-      <div class="course-card ${c.featured ? 'featured' : ''} ${c.ready ? '' : 'locked'}"
+      <div class="course-card ${c.featured ? 'featured' : ''} ${c.ready ? '' : 'locked'} ${hasEvent ? 'has-event' : ''}"
            data-ready="${c.ready}" data-course-id="${escapeHtml(c.id)}">
         ${mediaHtml}
         <div class="course-card-num" style="color:${numColor}">${escapeHtml(c.num)}</div>
-        ${c.ready
-          ? `<div class="course-card-arrow" ${arrowStyle}><span class="icon">arrow_forward</span></div>`
-          : `<div class="course-card-coming"><span class="icon">schedule</span>${t('soon')}</div>`}
+        ${hasEvent
+          ? `<div class="course-card-event"><span class="icon">redeem</span>EVENT</div>`
+          : c.ready
+            ? `<div class="course-card-arrow" ${arrowStyle}><span class="icon">arrow_forward</span></div>`
+            : `<div class="course-card-coming"><span class="icon">schedule</span>${t('soon')}</div>`}
         <div class="course-card-content">
           <div class="course-card-tag">${escapeHtml(c.tag || '')}</div>
           <div class="course-card-title-en">${escapeHtml(titleSlogan)}</div>
@@ -561,6 +600,9 @@ function renderDetail(course) {
     }
   }
 
+  // 🎁 이벤트 공지 (후기창 최상단 고정)
+  renderEventNotice(course);
+
   // 스토리
   const storyTitle = document.getElementById('storyTitle');
   const storyText = document.getElementById('storyText');
@@ -588,17 +630,19 @@ function renderDetail(course) {
     }).join('');
   }
 
-  // 화장실
-  const restroomGrid = document.getElementById('restroomGrid');
-  if (restroomGrid && course.restrooms) {
-    restroomGrid.innerHTML = course.restrooms.map(r => `
+  // 화장실 - 가로 스크롤 캐러셀
+  const restroomCarousel = document.getElementById('restroomCarousel');
+  if (restroomCarousel && course.restrooms) {
+    restroomCarousel.innerHTML = course.restrooms.map(r => `
       <div class="restroom-card">
-        <div class="restroom-icon"><span class="icon">${escapeHtml(r.icon || 'wc')}</span></div>
-        <div class="restroom-info">
-          <div class="restroom-name">${escapeHtml(r.name?.[currentLang] || r.name?.ko || '')}</div>
-          <div class="restroom-meta">${escapeHtml(r.dist?.[currentLang] || r.dist?.ko || '')}</div>
-          <div class="restroom-hours ${r.always ? 'always' : ''}">${escapeHtml(r.hours?.[currentLang] || r.hours?.ko || '')}</div>
+        <div class="restroom-card-head">
+          <div class="restroom-icon"><span class="icon">${escapeHtml(r.icon || 'wc')}</span></div>
+          <div class="restroom-info">
+            <div class="restroom-name">${escapeHtml(r.name?.[currentLang] || r.name?.ko || '')}</div>
+            <div class="restroom-meta">${escapeHtml(r.dist?.[currentLang] || r.dist?.ko || '')}</div>
+          </div>
         </div>
+        <div class="restroom-hours ${r.always ? 'always' : ''}">${escapeHtml(r.hours?.[currentLang] || r.hours?.ko || '')}</div>
       </div>
     `).join('');
   }
@@ -607,6 +651,32 @@ function renderDetail(course) {
   if (effective.gpx && window.BusanRunnerMap) {
     window.BusanRunnerMap.render(effective, currentLang);
   }
+}
+
+/* ============== EVENT NOTICE (후기창 최상단 고정 공지) ============== */
+function renderEventNotice(course) {
+  const notice = document.getElementById('eventNotice');
+  if (!notice) return;
+  
+  const ev = getEventLocalized(course, currentLang);
+  
+  if (!ev) {
+    notice.style.display = 'none';
+    notice.innerHTML = '';
+    return;
+  }
+  
+  notice.style.display = '';
+  notice.innerHTML = `
+    <div class="event-notice-tag">
+      <span class="icon">redeem</span>
+      <span>${escapeHtml(ev.tag)}</span>
+    </div>
+    <div class="event-notice-title">${escapeHtml(ev.title)}</div>
+    <div class="event-notice-period">${escapeHtml(ev.period)}</div>
+    ${ev.prizes ? `<div class="event-notice-prizes">${escapeHtml(ev.prizes)}</div>` : ''}
+    ${ev.instructions ? `<div class="event-notice-instructions">${escapeHtml(ev.instructions)}</div>` : ''}
+  `;
 }
 
 /* ============== VARIANT TOGGLE (기본/롱런 등) ============== */
@@ -832,27 +902,44 @@ async function fetchComments() {
         id: c.id, text: c.content, by: c.user_name, color: c.user_color,
         time: new Date(c.created_at).getTime(),
         mine: c.session_id === SESSION_ID,
+        photo_url: c.photo_url || null,
       }));
     }
   } catch (e) { console.error('fetchComments', e); }
 }
 
-async function postComment(text) {
-  const { data, error } = await sb.from('course_comments').insert({
+async function postComment(text, photoUrl) {
+  const payload = {
     course_id: state.currentCourse.id,
     session_id: SESSION_ID,
     user_name: state.user.nick,
     user_color: state.user.color,
     content: text,
-  }).select().single();
+  };
+  if (photoUrl) payload.photo_url = photoUrl;
+  
+  const { data, error } = await sb.from('course_comments').insert(payload).select().single();
   if (error) {
     console.error('postComment', error);
+    // photo_url 컬럼이 없는 경우 - 사진 없이 재시도
+    if (photoUrl && error.message && error.message.includes('photo_url')) {
+      showToast('사진 첨부 기능 비활성화 (DB 컬럼 추가 필요)', 'warning');
+      delete payload.photo_url;
+      const retry = await sb.from('course_comments').insert(payload).select().single();
+      if (retry.error) return false;
+      state.comments.unshift({
+        id: retry.data.id, text: retry.data.content, by: retry.data.user_name, color: retry.data.user_color,
+        time: new Date(retry.data.created_at).getTime(), mine: true, photo_url: null,
+      });
+      return true;
+    }
     showToast('댓글 등록 실패', 'warning');
     return false;
   }
   state.comments.unshift({
     id: data.id, text: data.content, by: data.user_name, color: data.user_color,
     time: new Date(data.created_at).getTime(), mine: true,
+    photo_url: data.photo_url || null,
   });
   return true;
 }
@@ -1208,60 +1295,173 @@ function closeLightbox() {
   document.body.style.overflow = '';
 }
 
-/* ============== COMMENTS ============== */
+/* ============== REVIEWS (댓글 + 사진 첨부) ============== */
+let attachedPhotoFile = null;  // 댓글에 첨부할 사진 (압축 후 File)
+
 function setupComments() {
   const input = document.getElementById('commentInput');
   const submit = document.getElementById('commentSubmit');
-  input.addEventListener('input', () => { submit.disabled = !input.value.trim(); });
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !submit.disabled) submit.click(); });
+  const photoBtn = document.getElementById('reviewPhotoBtn');
+  const photoInput = document.getElementById('reviewPhotoInput');
+  const preview = document.getElementById('reviewPhotoPreview');
+  const previewImg = document.getElementById('reviewPhotoPreviewImg');
+  const photoRemove = document.getElementById('reviewPhotoRemove');
+  
+  if (!input || !submit) return;
+  
+  // 활성화 조건: 텍스트 OR 사진 있음
+  const updateSubmit = () => {
+    const hasText = input.value.trim().length > 0;
+    const hasPhoto = !!attachedPhotoFile;
+    submit.disabled = !hasText && !hasPhoto;
+  };
+  
+  input.addEventListener('input', updateSubmit);
+  input.addEventListener('keydown', (e) => { 
+    if (e.key === 'Enter' && !submit.disabled) submit.click(); 
+  });
+  
+  // 사진 첨부 버튼
+  if (photoBtn && photoInput) {
+    photoBtn.addEventListener('click', () => photoInput.click());
+    photoInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const compressed = await compressImage(file);
+        attachedPhotoFile = compressed;
+        // 미리보기
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          previewImg.src = ev.target.result;
+          preview.style.display = '';
+        };
+        reader.readAsDataURL(compressed);
+        photoBtn.classList.add('attached');
+        updateSubmit();
+      } catch (err) {
+        console.error('사진 압축 실패', err);
+        showToast('사진 처리 실패', 'warning');
+      }
+    });
+  }
+  
+  // 사진 제거
+  if (photoRemove) {
+    photoRemove.addEventListener('click', () => {
+      attachedPhotoFile = null;
+      previewImg.src = '';
+      preview.style.display = 'none';
+      photoInput.value = '';
+      photoBtn.classList.remove('attached');
+      updateSubmit();
+    });
+  }
+  
+  // 등록 (텍스트 + 사진)
   submit.addEventListener('click', () => {
     const text = input.value.trim();
-    if (!text) return;
+    if (!text && !attachedPhotoFile) return;
+    
     ensureUser(async () => {
       submit.disabled = true;
-      const ok = await postComment(text);
+      submit.textContent = '...';
+      
+      let photoUrl = null;
+      // 사진 첨부됐으면 먼저 Storage에 업로드
+      if (attachedPhotoFile) {
+        try {
+          const fileName = `comment-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+          const filePath = `${state.currentCourse.id}/${fileName}`;
+          const { error: upErr } = await sb.storage.from('course-photos')
+            .upload(filePath, attachedPhotoFile, { contentType: 'image/jpeg' });
+          if (upErr) {
+            console.error('사진 업로드', upErr);
+            showToast('사진 업로드 실패', 'warning');
+            submit.disabled = false;
+            submit.textContent = t('detail.comments.submit');
+            return;
+          }
+          const { data: pub } = sb.storage.from('course-photos').getPublicUrl(filePath);
+          photoUrl = pub.publicUrl;
+        } catch (e) {
+          console.error('사진 처리', e);
+        }
+      }
+      
+      const ok = await postComment(text || '(사진)', photoUrl);
+      
+      submit.textContent = t('detail.comments.submit');
       if (ok) {
-        renderComments(); renderEngagement();
+        renderReviews(); renderEngagement();
         input.value = '';
+        attachedPhotoFile = null;
+        if (preview) preview.style.display = 'none';
+        if (previewImg) previewImg.src = '';
+        if (photoInput) photoInput.value = '';
+        if (photoBtn) photoBtn.classList.remove('attached');
+        updateSubmit();
         showToast(t('toast.comment.ok'), 'check_circle');
-      } else { submit.disabled = false; }
+      } else {
+        submit.disabled = false;
+      }
     });
   });
 }
 
-function renderComments() {
-  const list = document.getElementById('commentsList');
+function renderReviews() {
+  const list = document.getElementById('reviewsList');
   if (!list) return;
   if (!state.comments.length) {
-    list.innerHTML = `<div class="comments-empty">${t('comments.empty')}</div>`;
+    list.innerHTML = `<div class="reviews-empty">${t('reviews.empty')}</div>`;
     return;
   }
-  list.innerHTML = state.comments.map(c => `
-    <div class="comment" data-comment-id="${c.id}">
-      <div class="comment-avatar" style="background:${escapeHtml(c.color)}">${escapeHtml((c.by[0] || '?').toUpperCase())}</div>
-      <div class="comment-body">
-        <div class="comment-head">
-          <span class="comment-name">${escapeHtml(c.by)}</span>
-          ${c.mine ? `<span class="comment-mine">${t('mine')}</span>` : ''}
-          <span class="comment-time">${timeAgo(c.time)}</span>
-          ${c.mine ? `<button class="comment-delete" data-comment-id="${c.id}" aria-label="Delete"><span class="icon">delete</span></button>` : ''}
+  list.innerHTML = state.comments.map(c => {
+    const initial = (c.by[0] || '?').toUpperCase();
+    const hasPhoto = !!c.photo_url;
+    return `
+      <div class="review" data-comment-id="${c.id}">
+        <div class="review-avatar" style="background:${escapeHtml(c.color)}">${escapeHtml(initial)}</div>
+        <div class="review-body">
+          <div class="review-text-block">
+            <div class="review-head">
+              <span class="review-name">${escapeHtml(c.by)}</span>
+              ${c.mine ? `<span class="review-mine">${t('mine')}</span>` : ''}
+              <span class="review-time">${timeAgo(c.time)}</span>
+              ${c.mine ? `<button class="review-delete" data-comment-id="${c.id}" aria-label="Delete"><span class="icon">delete</span></button>` : ''}
+            </div>
+            <div class="review-text">${escapeHtml(c.text)}</div>
+          </div>
+          ${hasPhoto ? `<img class="review-photo" src="${escapeHtml(c.photo_url)}" alt="" loading="lazy" data-url="${escapeHtml(c.photo_url)}" />` : ''}
         </div>
-        <div class="comment-text">${escapeHtml(c.text)}</div>
       </div>
-    </div>
-  `).join('');
-  list.querySelectorAll('.comment-delete').forEach(btn => {
-    btn.addEventListener('click', () => {
+    `;
+  }).join('');
+  
+  // 삭제 버튼
+  list.querySelectorAll('.review-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       const id = parseInt(btn.dataset.commentId, 10);
       showConfirm('confirm.comment.msg', async () => {
         const ok = await deleteComment(id);
         if (ok) {
-          renderComments(); renderEngagement();
+          renderReviews(); renderEngagement();
           showToast(t('toast.deleted'), 'check_circle');
         }
       });
     });
   });
+  
+  // 사진 클릭 → 라이트박스
+  list.querySelectorAll('.review-photo').forEach(img => {
+    img.addEventListener('click', () => openLightbox(img.dataset.url));
+  });
+}
+
+// 옛 함수 - 호환성 위해 유지 (renderReviews로 위임)
+function renderComments() {
+  renderReviews();
 }
 
 /* ============== CONFIRM ============== */
@@ -1348,9 +1548,12 @@ async function init() {
   setupLike();
 
   document.getElementById('backBtn').addEventListener('click', () => go('landing'));
-  document.getElementById('addPhotoBtn').addEventListener('click', () => {
-    ensureUser(() => openModal('photoModal'));
-  });
+  const addPhotoBtn = document.getElementById('addPhotoBtn');
+  if (addPhotoBtn) {
+    addPhotoBtn.addEventListener('click', () => {
+      ensureUser(() => openModal('photoModal'));
+    });
+  }
 
   document.querySelectorAll('[data-toast-key]').forEach(el => {
     el.addEventListener('click', (e) => {
