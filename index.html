@@ -199,6 +199,59 @@ input, textarea { font-family: inherit; }
 .course-card-meta { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.7); letter-spacing: 0.05em; }
 .course-card-coming { position: absolute; top: 14px; right: 14px; z-index: 4; padding: 4px 9px; background: rgba(255,255,255,0.1); backdrop-filter: blur(8px); border-radius: 99px; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.6); letter-spacing: 0.1em; display: flex; align-items: center; gap: 4px; }
 .course-card-coming .icon { font-size: 11px; }
+
+/* 🎁 이벤트 배지 (우측 상단, 반짝거림) */
+.course-card-event {
+  position: absolute; top: 14px; right: 14px; z-index: 5;
+  padding: 5px 11px;
+  background: var(--coral);
+  color: white;
+  border-radius: 99px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 4px 14px rgba(255,107,74,0.45);
+  animation: eventPulse 2s ease-in-out infinite;
+}
+.course-card-event .icon { font-size: 12px; color: white; }
+@keyframes eventPulse {
+  0%, 100% { 
+    box-shadow: 0 4px 14px rgba(255,107,74,0.45);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 6px 22px rgba(255,107,74,0.7);
+    transform: scale(1.05);
+  }
+}
+
+/* 이벤트 진행 중인 카드 외곽선 글로우 */
+.course-card.has-event {
+  box-shadow: 0 0 0 2px rgba(255,107,74,0.5),
+              0 6px 24px -6px rgba(255,107,74,0.4);
+  animation: cardGlow 3s ease-in-out infinite;
+}
+@keyframes cardGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(255,107,74,0.4),
+                0 6px 22px -6px rgba(255,107,74,0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 2px rgba(255,107,74,0.7),
+                0 10px 32px -4px rgba(255,107,74,0.6);
+  }
+}
+.course-card.has-event:hover { 
+  transform: translateY(-4px); 
+  animation-play-state: paused;
+  box-shadow: 0 0 0 2px var(--coral),
+              0 24px 50px -16px rgba(255,107,74,0.6);
+}
+
 .course-card-arrow {
   position: absolute; top: 14px; right: 14px;
   width: 32px; height: 32px; border-radius: 50%;
@@ -380,6 +433,119 @@ input, textarea { font-family: inherit; }
   border-left: 2px solid var(--course-color);
 }
 
+/* 🎁 이벤트 배너 (상세 페이지) */
+.detail-event-banner {
+  background: linear-gradient(135deg, #FF6B4A 0%, #E84A2B 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 24px 22px;
+  margin: 28px 0 8px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 32px -8px rgba(255,107,74,0.45);
+}
+.detail-event-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 100% 0%, rgba(255,255,255,0.2) 0%, transparent 50%);
+  pointer-events: none;
+}
+.detail-event-content {
+  position: relative;
+  z-index: 1;
+}
+.detail-event-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.22);
+  backdrop-filter: blur(6px);
+  padding: 5px 11px;
+  border-radius: 99px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  margin-bottom: 14px;
+}
+.detail-event-tag .icon { font-size: 14px; }
+.detail-event-title {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.detail-event-period {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0.06em;
+  margin-bottom: 18px;
+}
+.detail-event-prizes {
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(4px);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.detail-event-instructions {
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.95);
+  white-space: pre-line;
+}
+.detail-event-scroll {
+  margin-top: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
+  padding: 9px 16px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 99px;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+.detail-event-scroll:hover {
+  background: rgba(255,255,255,0.28);
+}
+.detail-event-scroll .icon {
+  font-size: 16px;
+  animation: scrollHint 1.6s ease-in-out infinite;
+}
+@keyframes scrollHint {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(3px); }
+}
+
+/* 사진/댓글 섹션에 이벤트 표시 */
+.event-section-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--coral-soft);
+  color: var(--coral);
+  padding: 5px 11px;
+  border-radius: 99px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+.event-section-hint .icon { font-size: 13px; }
+
 .engagement-bar { background: var(--white); border-bottom: 1px solid var(--line); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; position: sticky; top: 0; z-index: 30; }
 .engagement-stats { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
 .engagement-stat { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--mute); }
@@ -466,17 +632,339 @@ input, textarea { font-family: inherit; }
 .info-row-value em { font-family: 'Fraunces', serif; font-style: italic; font-weight: 400; color: var(--course-color); }
 .info-row-sub { font-size: 13px; color: var(--mute); margin-top: 6px; line-height: 1.5; }
 
-.restroom-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 16px; }
-@media (min-width: 500px) { .restroom-grid { grid-template-columns: repeat(2, 1fr); } }
-.restroom-card { background: var(--white); border: 1px solid var(--line); border-radius: 8px; padding: 14px; display: flex; gap: 12px; align-items: flex-start; transition: border-color 0.2s, transform 0.2s; }
-.restroom-card:hover { border-color: var(--course-color); transform: translateY(-2px); }
-.restroom-icon { width: 38px; height: 38px; border-radius: 8px; background: var(--course-soft); display: grid; place-items: center; flex-shrink: 0; }
+/* ============== 화장실 가로 스크롤 캐러셀 ============== */
+.restroom-hint {
+  font-size: 12px;
+  color: var(--mute);
+  margin-top: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.04em;
+}
+.restroom-carousel {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin: 16px -20px 0;
+  padding: 4px 20px 14px;
+  scroll-padding-left: 20px;
+}
+.restroom-carousel::-webkit-scrollbar { display: none; }
+.restroom-card {
+  flex: 0 0 220px;
+  scroll-snap-align: start;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.restroom-card:hover {
+  border-color: var(--course-color);
+  transform: translateY(-2px);
+}
+.restroom-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.restroom-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: var(--course-soft);
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
 .restroom-icon .icon { color: var(--course-color); font-size: 20px; }
 .restroom-info { flex: 1; min-width: 0; }
-.restroom-name { font-size: 14px; font-weight: 700; color: var(--navy-ink); letter-spacing: -0.01em; margin-bottom: 4px; }
-.restroom-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--course-color); letter-spacing: 0.05em; margin-bottom: 4px; display: inline-block; padding: 2px 6px; background: var(--course-soft); border-radius: 4px; }
-.restroom-hours { font-size: 12px; color: var(--mute); }
+.restroom-name {
+  font-size: 13px; font-weight: 700;
+  color: var(--navy-ink);
+  letter-spacing: -0.01em;
+  margin-bottom: 2px;
+  line-height: 1.3;
+}
+.restroom-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  color: var(--course-color);
+  letter-spacing: 0.04em;
+}
+.restroom-hours {
+  font-size: 11.5px;
+  color: var(--mute);
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
 .restroom-hours.always { color: var(--success); font-weight: 600; }
+
+/* ============== 이벤트 공지 (후기 섹션 최상단 고정) ============== */
+.event-notice {
+  background: linear-gradient(135deg, #FFF6F2 0%, #FFEDE5 100%);
+  border: 1px solid var(--coral);
+  border-radius: 12px;
+  padding: 18px 18px 16px;
+  margin: 14px 0 20px;
+  position: relative;
+}
+.event-notice-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--coral);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  margin-bottom: 10px;
+}
+.event-notice-tag .icon { font-size: 12px; color: white; }
+.event-notice-title {
+  font-family: 'Pretendard Variable', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--navy-ink);
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+  line-height: 1.35;
+}
+.event-notice-period {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--mute);
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+.event-notice-prizes {
+  background: white;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--coral);
+  margin-bottom: 10px;
+  line-height: 1.45;
+}
+.event-notice-instructions {
+  font-size: 12.5px;
+  color: var(--ink);
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+/* ============== 후기(REVIEW) 리스트 - 트위터 스타일 ============== */
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.review {
+  display: flex;
+  gap: 11px;
+  padding: 14px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  transition: border-color 0.2s;
+}
+.review:hover { border-color: var(--line); }
+.review-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: grid; place-items: center;
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 14px;
+  color: white;
+}
+.review-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+}
+.review-text-block {
+  flex: 1;
+  min-width: 0;
+}
+.review-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+.review-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy-ink);
+}
+.review-time {
+  font-size: 11px;
+  color: var(--mute);
+  font-family: 'JetBrains Mono', monospace;
+}
+.review-mine {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 99px;
+  background: var(--coral-soft);
+  color: var(--coral);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.05em;
+}
+.review-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
+  word-wrap: break-word;
+  word-break: break-word;
+}
+.review-delete {
+  background: none; border: none;
+  padding: 4px;
+  margin-left: auto;
+  color: var(--mute);
+  cursor: pointer;
+  border-radius: 50%;
+  width: 26px; height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.review-delete:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.review-delete .icon { font-size: 14px; }
+.review-photo {
+  width: 76px; height: 76px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  object-fit: cover;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  transition: transform 0.15s;
+  background: var(--cream);
+}
+.review-photo:hover { transform: scale(1.05); }
+.reviews-empty {
+  padding: 40px 20px;
+  text-align: center;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: var(--mute);
+  line-height: 1.6;
+  background: var(--cream);
+  border-radius: 12px;
+  border: 1px dashed var(--line);
+}
+
+/* 후기 작성 (사진 첨부 가능) */
+.review-compose {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px;
+  transition: border-color 0.2s;
+}
+.review-compose:focus-within { border-color: var(--navy-ink); }
+.review-compose-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.review-compose-row input[type="text"] {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: none;
+  font-size: 14px;
+  padding: 10px 12px;
+  min-width: 0;
+}
+.review-photo-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  color: var(--mute);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  background: none;
+  flex-shrink: 0;
+}
+.review-photo-btn:hover {
+  background: var(--coral-soft);
+  color: var(--coral);
+}
+.review-photo-btn.attached {
+  background: var(--coral-soft);
+  color: var(--coral);
+}
+.review-photo-btn .icon { font-size: 20px; }
+.review-compose-row button:not(.review-photo-btn) {
+  padding: 9px 18px;
+  border-radius: 99px;
+  background: var(--navy-ink);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.review-compose-row button:not(.review-photo-btn):disabled {
+  background: var(--line);
+  color: var(--mute);
+  cursor: not-allowed;
+}
+.review-compose-row button:not(.review-photo-btn):not(:disabled):hover {
+  background: var(--coral);
+}
+
+/* 첨부 사진 미리보기 */
+.review-photo-preview {
+  position: relative;
+  margin: 8px 8px 8px;
+  width: 100px;
+  height: 100px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.review-photo-preview img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.review-photo-remove {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  display: grid; place-items: center;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.review-photo-remove:hover { background: var(--danger); }
+.review-photo-remove .icon { font-size: 14px; color: white; }
 
 .gallery-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
 .gallery-add-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: 99px; background: var(--coral); color: white; font-size: 13px; font-weight: 700; transition: transform 0.2s; }
@@ -751,30 +1239,40 @@ input, textarea { font-family: inherit; }
     <section class="detail-section">
       <div class="detail-section-eyebrow" data-i18n="detail.restroom.eyebrow">── RESTROOMS · 화장실</div>
       <h2 class="detail-section-title" data-i18n="detail.restroom.title">러너의 <em>필수 정보.</em></h2>
-      <div class="restroom-grid" id="restroomGrid"></div>
+      <p class="restroom-hint" data-i18n="detail.restroom.hint">좌우로 스와이프 해보세요 →</p>
+      <div class="restroom-carousel" id="restroomCarousel"></div>
     </section>
 
-    <section class="detail-section">
-      <div class="gallery-head">
-        <div>
-          <div class="detail-section-eyebrow" data-i18n="detail.photos.eyebrow">── PHOTOS · 러너의 시선</div>
-          <h2 class="detail-section-title" data-i18n="detail.photos.title">이 코스의 <em>풍경.</em></h2>
+    <!-- 후기 (사진 + 댓글 통합 섹션) -->
+    <section class="detail-section" id="reviewsSection">
+      <div class="detail-section-eyebrow" data-i18n="detail.reviews.eyebrow">── REVIEWS · 후기</div>
+      <h2 class="detail-section-title" data-i18n="detail.reviews.title">달려본 사람들의 <em>한 마디.</em></h2>
+      
+      <!-- 📌 이벤트 공지 (항상 최상단 고정) -->
+      <div class="event-notice" id="eventNotice" style="display:none"></div>
+      
+      <!-- 후기 리스트 (댓글 + 첨부 사진 통합) -->
+      <div class="reviews-list" id="reviewsList"></div>
+      
+      <!-- 후기 작성 (댓글 + 사진 첨부) -->
+      <div class="review-compose" id="reviewCompose">
+        <div class="review-compose-row">
+          <input type="text" id="commentInput" 
+                 data-i18n-placeholder="detail.comments.placeholder" 
+                 placeholder="이 코스 어떠셨어요?" maxlength="200" />
+          <button class="review-photo-btn" id="reviewPhotoBtn" aria-label="사진 첨부">
+            <span class="icon">add_a_photo</span>
+          </button>
+          <button id="commentSubmit" disabled data-i18n="detail.comments.submit">등록</button>
         </div>
-        <button class="gallery-add-btn" id="addPhotoBtn">
-          <span class="icon">add_a_photo</span>
-          <span data-i18n="detail.photos.upload">사진 올리기</span>
-        </button>
-      </div>
-      <div id="galleryContainer"></div>
-    </section>
-
-    <section class="detail-section">
-      <div class="detail-section-eyebrow" data-i18n="detail.comments.eyebrow">── COMMENTS · 후기</div>
-      <h2 class="detail-section-title" data-i18n="detail.comments.title">달려본 사람들의 <em>한 마디.</em></h2>
-      <div class="comments-list" id="commentsList"></div>
-      <div class="comment-compose">
-        <input type="text" id="commentInput" data-i18n-placeholder="detail.comments.placeholder" placeholder="이 코스 어떠셨어요?" maxlength="200" />
-        <button id="commentSubmit" disabled data-i18n="detail.comments.submit">등록</button>
+        <!-- 첨부 사진 미리보기 -->
+        <div class="review-photo-preview" id="reviewPhotoPreview" style="display:none">
+          <img id="reviewPhotoPreviewImg" alt="" />
+          <button class="review-photo-remove" id="reviewPhotoRemove" aria-label="제거">
+            <span class="icon">close</span>
+          </button>
+        </div>
+        <input type="file" id="reviewPhotoInput" accept="image/*" style="display:none" />
       </div>
     </section>
 
