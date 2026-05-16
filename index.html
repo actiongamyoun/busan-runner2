@@ -200,56 +200,95 @@ input, textarea { font-family: inherit; }
 .course-card-coming { position: absolute; top: 14px; right: 14px; z-index: 4; padding: 4px 9px; background: rgba(255,255,255,0.1); backdrop-filter: blur(8px); border-radius: 99px; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.6); letter-spacing: 0.1em; display: flex; align-items: center; gap: 4px; }
 .course-card-coming .icon { font-size: 11px; }
 
-/* 🎁 이벤트 배지 (우측 상단, 반짝거림) */
+/* 🎁 이벤트 배지 - 크고 콩콩 튀는 (강화) */
 .course-card-event {
-  position: absolute; top: 14px; right: 14px; z-index: 5;
-  padding: 5px 11px;
-  background: var(--coral);
+  position: absolute; top: 12px; right: 12px; z-index: 5;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, #FF6B4A 0%, #E84A2B 100%);
   color: white;
   border-radius: 99px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  box-shadow: 0 4px 14px rgba(255,107,74,0.45);
-  animation: eventPulse 2s ease-in-out infinite;
+  gap: 6px;
+  box-shadow: 0 6px 18px rgba(255,107,74,0.55),
+              0 0 0 2px rgba(255,255,255,0.25);
+  animation: eventBadgeBounce 1.6s ease-in-out infinite;
+  transform-origin: center bottom;
 }
-.course-card-event .icon { font-size: 12px; color: white; }
-@keyframes eventPulse {
+.course-card-event .icon { 
+  font-size: 14px; color: white; 
+  animation: eventBadgeWiggle 1.6s ease-in-out infinite;
+}
+
+/* 배지 콩콩 튀기 (위아래) */
+@keyframes eventBadgeBounce {
   0%, 100% { 
-    box-shadow: 0 4px 14px rgba(255,107,74,0.45);
-    transform: scale(1);
+    transform: translateY(0) scale(1);
+    box-shadow: 0 6px 18px rgba(255,107,74,0.55),
+                0 0 0 2px rgba(255,255,255,0.25);
   }
-  50% { 
-    box-shadow: 0 6px 22px rgba(255,107,74,0.7);
-    transform: scale(1.05);
+  30% { 
+    transform: translateY(-6px) scale(1.06);
+    box-shadow: 0 14px 26px rgba(255,107,74,0.7),
+                0 0 0 2px rgba(255,255,255,0.35);
+  }
+  50% { transform: translateY(0) scale(1); }
+  62% { transform: translateY(-3px) scale(1.03); }
+  75% { transform: translateY(0) scale(1); }
+}
+
+/* 🎁 아이콘 살짝 흔들기 */
+@keyframes eventBadgeWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-10deg); }
+  50% { transform: rotate(0deg); }
+  75% { transform: rotate(10deg); }
+}
+
+/* 이벤트 진행 중인 카드 - 진한 외곽선 글로우 + 살짝 떠있음 */
+.course-card.has-event {
+  transform: translateY(-3px);  /* 다른 카드보다 살짝 위로 */
+  box-shadow: 0 0 0 2.5px var(--coral),
+              0 14px 36px -8px rgba(255,107,74,0.55),
+              0 6px 16px -4px rgba(232,74,43,0.4);
+  animation: cardGlow 2.6s ease-in-out infinite;
+  position: relative;
+}
+
+/* 카드 외곽선 글로우 펄스 (강화) */
+@keyframes cardGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 2.5px rgba(255,107,74,0.85),
+                0 14px 36px -8px rgba(255,107,74,0.5),
+                0 6px 16px -4px rgba(232,74,43,0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(255,107,74,1),
+                0 20px 50px -6px rgba(255,107,74,0.85),
+                0 10px 24px -4px rgba(232,74,43,0.6);
   }
 }
 
-/* 이벤트 진행 중인 카드 외곽선 글로우 */
-.course-card.has-event {
-  box-shadow: 0 0 0 2px rgba(255,107,74,0.5),
-              0 6px 24px -6px rgba(255,107,74,0.4);
-  animation: cardGlow 3s ease-in-out infinite;
-}
-@keyframes cardGlow {
-  0%, 100% {
-    box-shadow: 0 0 0 2px rgba(255,107,74,0.4),
-                0 6px 22px -6px rgba(255,107,74,0.35);
-  }
-  50% {
-    box-shadow: 0 0 0 2px rgba(255,107,74,0.7),
-                0 10px 32px -4px rgba(255,107,74,0.6);
-  }
-}
+/* 호버 시 더 위로 */
 .course-card.has-event:hover { 
-  transform: translateY(-4px); 
+  transform: translateY(-7px); 
   animation-play-state: paused;
-  box-shadow: 0 0 0 2px var(--coral),
-              0 24px 50px -16px rgba(255,107,74,0.6);
+  box-shadow: 0 0 0 3px var(--coral),
+              0 28px 60px -16px rgba(255,107,74,0.7),
+              0 12px 24px -6px rgba(232,74,43,0.5);
+}
+
+/* 접근성: 동작 줄이기 모드 */
+@media (prefers-reduced-motion: reduce) {
+  .course-card-event,
+  .course-card-event .icon,
+  .course-card.has-event {
+    animation: none;
+  }
 }
 
 .course-card-arrow {
@@ -704,60 +743,147 @@ input, textarea { font-family: inherit; }
 .restroom-hours.always { color: var(--success); font-weight: 600; }
 
 /* ============== 이벤트 공지 (후기 섹션 최상단 고정) ============== */
+/* ============== 이벤트 공지 박스 - 진한 코랄 풀파워 ============== */
 .event-notice {
-  background: linear-gradient(135deg, #FFF6F2 0%, #FFEDE5 100%);
-  border: 1px solid var(--coral);
-  border-radius: 12px;
-  padding: 18px 18px 16px;
-  margin: 14px 0 20px;
+  background: linear-gradient(135deg, #FF6B4A 0%, #E84A2B 100%);
+  border: none;
+  border-radius: 14px;
+  padding: 22px 20px 20px;
+  margin: 14px 0 24px;
   position: relative;
+  overflow: hidden;
+  color: white;
+  box-shadow: 0 10px 32px -8px rgba(255,107,74,0.5),
+              0 4px 12px -4px rgba(232,74,43,0.4);
+  animation: noticePulse 2.4s ease-in-out infinite;
 }
+
+/* 부드러운 글로우 펄스 */
+@keyframes noticePulse {
+  0%, 100% {
+    box-shadow: 0 10px 32px -8px rgba(255,107,74,0.5),
+                0 4px 12px -4px rgba(232,74,43,0.4);
+  }
+  50% {
+    box-shadow: 0 14px 44px -6px rgba(255,107,74,0.75),
+                0 6px 18px -4px rgba(232,74,43,0.6);
+  }
+}
+
+/* 배경 셔머 효과 (오른쪽 위 빛) */
+.event-notice::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 60%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* 흰 글씨 위에 살짝 그림자 (가독성) */
+.event-notice > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 🎁 EVENT 태그 - 콩콩 튀기 */
 .event-notice-tag {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: var(--coral);
+  gap: 7px;
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   color: white;
-  padding: 4px 10px;
+  padding: 6px 13px;
   border-radius: 99px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  margin-bottom: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  margin-bottom: 14px;
+  border: 1.5px solid rgba(255,255,255,0.4);
+  animation: bounceTag 1.8s ease-in-out infinite;
+  transform-origin: center bottom;
 }
-.event-notice-tag .icon { font-size: 12px; color: white; }
+.event-notice-tag .icon {
+  font-size: 14px;
+  color: white;
+  animation: wiggle 1.8s ease-in-out infinite;
+}
+
+/* 콩콩 튀는 애니메이션 (위아래) */
+@keyframes bounceTag {
+  0%, 100% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-5px) scale(1.04); }
+  50% { transform: translateY(0) scale(1); }
+  60% { transform: translateY(-2px) scale(1.02); }
+  75% { transform: translateY(0) scale(1); }
+}
+
+/* 🎁 아이콘 살짝 흔들기 */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  50% { transform: rotate(0deg); }
+  75% { transform: rotate(8deg); }
+}
+
+/* 이벤트 제목 - Fraunces 이탤릭으로 멋스럽게 */
 .event-notice-title {
-  font-family: 'Pretendard Variable', sans-serif;
-  font-weight: 700;
-  font-size: 15px;
-  color: var(--navy-ink);
-  letter-spacing: -0.01em;
-  margin-bottom: 4px;
-  line-height: 1.35;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 1.18;
+  color: white;
+  letter-spacing: -0.015em;
+  margin-bottom: 6px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
+
+/* 기간 */
 .event-notice-period {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--mute);
-  letter-spacing: 0.06em;
-  margin-bottom: 10px;
-}
-.event-notice-prizes {
-  background: white;
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 12.5px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0.08em;
+  margin-bottom: 14px;
   font-weight: 600;
-  color: var(--coral);
-  margin-bottom: 10px;
-  line-height: 1.45;
 }
+
+/* 상품 박스 - 반투명 흰배경 + 코랄 글씨 */
+.event-notice-prizes {
+  background: rgba(255,255,255,0.95);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #E84A2B;
+  margin-bottom: 14px;
+  line-height: 1.5;
+  letter-spacing: -0.005em;
+  box-shadow: 0 4px 10px -4px rgba(0,0,0,0.15);
+}
+
+/* 참가 방법 */
 .event-notice-instructions {
-  font-size: 12.5px;
-  color: var(--ink);
-  line-height: 1.6;
+  font-size: 13px;
+  color: rgba(255,255,255,0.95);
+  line-height: 1.7;
   white-space: pre-line;
+  font-weight: 500;
+}
+
+/* 접근성: 동작 줄이기 모드에서는 애니메이션 멈춤 */
+@media (prefers-reduced-motion: reduce) {
+  .event-notice,
+  .event-notice-tag,
+  .event-notice-tag .icon {
+    animation: none;
+  }
 }
 
 /* ============== 후기(REVIEW) 리스트 - 트위터 스타일 ============== */
