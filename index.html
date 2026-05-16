@@ -976,6 +976,11 @@ input, textarea { font-family: inherit; }
   color: var(--danger);
 }
 .review-delete .icon { font-size: 14px; }
+.review-photos {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
 .review-photo {
   width: 76px; height: 76px;
   border-radius: 10px;
@@ -1063,15 +1068,24 @@ input, textarea { font-family: inherit; }
   background: var(--coral);
 }
 
-/* 첨부 사진 미리보기 */
+/* 첨부 사진 미리보기 (최대 2장) */
+.review-photo-previews {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 0 8px;
+}
+.review-photo-previews:empty { display: none; }
+.review-photo-previews:not(:empty) { padding-top: 8px; padding-bottom: 4px; }
+
 .review-photo-preview {
   position: relative;
-  margin: 8px 8px 8px;
   width: 100px;
   height: 100px;
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid var(--line);
+  background: var(--cream);
 }
 .review-photo-preview img {
   width: 100%; height: 100%;
@@ -1091,6 +1105,117 @@ input, textarea { font-family: inherit; }
 }
 .review-photo-remove:hover { background: var(--danger); }
 .review-photo-remove .icon { font-size: 14px; color: white; }
+
+/* 사진 첨부 버튼 카운터 (0/2) */
+.review-photo-btn {
+  position: relative;
+  flex-shrink: 0;
+}
+.review-photo-count {
+  position: absolute;
+  bottom: -2px; right: -2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--mute);
+  background: white;
+  border-radius: 99px;
+  padding: 1px 5px;
+  line-height: 1.3;
+  pointer-events: none;
+}
+.review-photo-btn.attached .review-photo-count {
+  color: var(--coral);
+  background: var(--coral-soft);
+}
+
+/* 답글 모드 안내 배너 */
+.review-reply-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 8px 0;
+  padding: 8px 12px;
+  background: var(--coral-soft);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--coral);
+  font-weight: 600;
+}
+.review-reply-banner .icon { font-size: 16px; }
+.review-reply-banner span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.review-reply-cancel {
+  width: 24px; height: 24px;
+  background: none; border: none;
+  color: var(--coral);
+  cursor: pointer;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.review-reply-cancel:hover { background: rgba(255,107,74,0.15); }
+.review-reply-cancel .icon { font-size: 14px; }
+
+/* 답글 (인용) UI */
+.review-replies {
+  margin-top: 10px;
+  margin-left: 0;
+  border-left: 2px solid var(--coral-soft);
+  padding-left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.review-replies:empty { display: none; }
+.review-reply {
+  display: flex;
+  gap: 9px;
+  padding: 10px;
+  background: var(--cream);
+  border-radius: 10px;
+}
+.review-reply .review-avatar {
+  width: 30px; height: 30px;
+  font-size: 12px;
+}
+.review-reply .review-name {
+  font-size: 12px;
+}
+.review-reply .review-text {
+  font-size: 13px;
+}
+.review-reply-btn {
+  background: none;
+  border: none;
+  color: var(--mute);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s;
+  font-family: 'Pretendard Variable', sans-serif;
+}
+.review-reply-btn:hover {
+  background: var(--coral-soft);
+  color: var(--coral);
+}
+.review-reply-btn .icon { font-size: 13px; }
+.review-foot {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+  align-items: center;
+}
 
 .gallery-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
 .gallery-add-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: 99px; background: var(--coral); color: white; font-size: 13px; font-weight: 700; transition: transform 0.2s; }
@@ -1380,25 +1505,29 @@ input, textarea { font-family: inherit; }
       <!-- 후기 리스트 (댓글 + 첨부 사진 통합) -->
       <div class="reviews-list" id="reviewsList"></div>
       
-      <!-- 후기 작성 (댓글 + 사진 첨부) -->
+      <!-- 후기 작성 (댓글 + 사진 최대 2장 첨부) -->
       <div class="review-compose" id="reviewCompose">
         <div class="review-compose-row">
           <input type="text" id="commentInput" 
                  data-i18n-placeholder="detail.comments.placeholder" 
                  placeholder="이 코스 어떠셨어요?" maxlength="200" />
-          <button class="review-photo-btn" id="reviewPhotoBtn" aria-label="사진 첨부">
+          <button class="review-photo-btn" id="reviewPhotoBtn" aria-label="사진 첨부 (최대 2장)">
             <span class="icon">add_a_photo</span>
+            <span class="review-photo-count" id="reviewPhotoCount">0/2</span>
           </button>
           <button id="commentSubmit" disabled data-i18n="detail.comments.submit">등록</button>
         </div>
-        <!-- 첨부 사진 미리보기 -->
-        <div class="review-photo-preview" id="reviewPhotoPreview" style="display:none">
-          <img id="reviewPhotoPreviewImg" alt="" />
-          <button class="review-photo-remove" id="reviewPhotoRemove" aria-label="제거">
+        <!-- 첨부 사진 미리보기 (최대 2장) -->
+        <div class="review-photo-previews" id="reviewPhotoPreviews"></div>
+        <input type="file" id="reviewPhotoInput" accept="image/*" multiple style="display:none" />
+        <!-- 답글 모드 안내 (답글 작성 시만 표시) -->
+        <div class="review-reply-banner" id="reviewReplyBanner" style="display:none">
+          <span class="icon">reply</span>
+          <span id="reviewReplyBannerText">답글 작성 중...</span>
+          <button class="review-reply-cancel" id="reviewReplyCancel" aria-label="취소">
             <span class="icon">close</span>
           </button>
         </div>
-        <input type="file" id="reviewPhotoInput" accept="image/*" style="display:none" />
       </div>
     </section>
 

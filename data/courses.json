@@ -30,20 +30,20 @@
           "en": "First Challenge Campaign"
         },
         "period": {
-          "ko": "2026.06.01 ~ 06.30",
-          "en": "JUN 1 - 30, 2026"
+          "ko": "2026.05.16 ~ 05.30",
+          "en": "MAY 16 - 30, 2026"
         },
         "tag": {
           "ko": "EVENT",
           "en": "EVENT"
         },
         "prizes": {
-          "ko": "🥇 1등 카페 쿠폰 30,000원 · 🎁 추첨 4명 5,000원",
-          "en": "🥇 1st Place 30,000 KRW · 🎁 4 Random Winners 5,000 KRW"
+          "ko": "🥇 1등 스타벅스 기프트카드 50,000원\n🍗 2등 치킨쿠폰 (2명)",
+          "en": "🥇 1st Place: Starbucks Gift Card 50,000 KRW\n🍗 2nd Place: Chicken Coupon × 2"
         },
         "instructions": {
-          "ko": "1. 이 코스를 완주합니다.\n2. 자기 러닝 앱(Zepp, Strava 등) 기록 스크린샷을 찍어요.\n3. 코스 어디서든 인증샷도 한 장.\n4. 아래 사진과 댓글로 인증해주세요!",
-          "en": "1. Complete this course.\n2. Screenshot your tracking app (Zepp, Strava, etc).\n3. Take a photo somewhere on the course.\n4. Submit via photos and comments below!"
+          "ko": "1. 이 코스를 완주합니다.\n2. 자기 러닝 앱(Zepp, Strava 등) 기록 스크린샷 + 코스 주변 사진을 찍어요.\n3. 아래 후기창에 사진과 함께 한 줄 남겨주세요!",
+          "en": "1. Complete this course.\n2. Take a screenshot of your tracking app (Zepp, Strava, etc) + a photo of the course.\n3. Submit a review below with both photos!"
         }
       },
       "distance_km": 4.8,

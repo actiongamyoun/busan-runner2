@@ -56,6 +56,11 @@ const I18N = {
     'detail.photos.upload': '사진 올리기',
     'gallery.empty': '아직 사진이 없어요.<br>첫 번째 풍경을 남겨보세요.',
     'reviews.empty': '아직 후기가 없어요.<br>이 코스의 첫 발자국이 되어보세요.',
+    'reply.btn': '답글',
+    'reply.cancel': '답글 취소',
+    'reply.placeholder': '답글을 입력하세요...',
+    'reply.banner': '@{name}에게 답글 작성 중',
+    'photo.max': '사진은 최대 2장까지 첨부할 수 있어요',
     'event.scroll': '인증하러 가기',
     'event.section.photos': '이벤트 인증 사진 · 러닝 기록 스크린샷 + 코스 인증샷',
     'event.section.comments': '이벤트 인증 댓글 · 완주 후기를 남겨주세요',
@@ -143,6 +148,11 @@ const I18N = {
     'detail.photos.upload': 'Add Photo',
     'gallery.empty': 'No photos yet.<br>Be the first to share a view.',
     'reviews.empty': 'No reviews yet.<br>Leave the first footprint on this course.',
+    'reply.btn': 'Reply',
+    'reply.cancel': 'Cancel',
+    'reply.placeholder': 'Write a reply...',
+    'reply.banner': 'Replying to @{name}',
+    'photo.max': 'Up to 2 photos can be attached',
     'event.scroll': 'Submit Below',
     'event.section.photos': 'Event Submission · Run tracking screenshot + photo',
     'event.section.comments': 'Event Submission · Share your finish review',
@@ -903,12 +913,14 @@ async function fetchComments() {
         time: new Date(c.created_at).getTime(),
         mine: c.session_id === SESSION_ID,
         photo_url: c.photo_url || null,
+        photo_url2: c.photo_url2 || null,
+        parent_id: c.parent_id || null,
       }));
     }
   } catch (e) { console.error('fetchComments', e); }
 }
 
-async function postComment(text, photoUrl) {
+async function postComment(text, photoUrl, photoUrl2, parentId) {
   const payload = {
     course_id: state.currentCourse.id,
     session_id: SESSION_ID,
@@ -917,19 +929,24 @@ async function postComment(text, photoUrl) {
     content: text,
   };
   if (photoUrl) payload.photo_url = photoUrl;
+  if (photoUrl2) payload.photo_url2 = photoUrl2;
+  if (parentId) payload.parent_id = parentId;
   
   const { data, error } = await sb.from('course_comments').insert(payload).select().single();
   if (error) {
     console.error('postComment', error);
-    // photo_url 컬럼이 없는 경우 - 사진 없이 재시도
-    if (photoUrl && error.message && error.message.includes('photo_url')) {
-      showToast('사진 첨부 기능 비활성화 (DB 컬럼 추가 필요)', 'warning');
-      delete payload.photo_url;
+    // 컬럼이 없는 경우 - 안전 모드 (photo_url2 / parent_id 제거 후 재시도)
+    if (error.message && (error.message.includes('photo_url2') || error.message.includes('parent_id'))) {
+      showToast('일부 기능 미활성 (DB 컬럼 추가 필요)', 'warning');
+      delete payload.photo_url2;
+      delete payload.parent_id;
       const retry = await sb.from('course_comments').insert(payload).select().single();
       if (retry.error) return false;
       state.comments.unshift({
         id: retry.data.id, text: retry.data.content, by: retry.data.user_name, color: retry.data.user_color,
-        time: new Date(retry.data.created_at).getTime(), mine: true, photo_url: null,
+        time: new Date(retry.data.created_at).getTime(), mine: true,
+        photo_url: retry.data.photo_url || null,
+        photo_url2: null, parent_id: null,
       });
       return true;
     }
@@ -940,6 +957,8 @@ async function postComment(text, photoUrl) {
     id: data.id, text: data.content, by: data.user_name, color: data.user_color,
     time: new Date(data.created_at).getTime(), mine: true,
     photo_url: data.photo_url || null,
+    photo_url2: data.photo_url2 || null,
+    parent_id: data.parent_id || null,
   });
   return true;
 }
@@ -1295,26 +1314,63 @@ function closeLightbox() {
   document.body.style.overflow = '';
 }
 
-/* ============== REVIEWS (댓글 + 사진 첨부) ============== */
-let attachedPhotoFile = null;  // 댓글에 첨부할 사진 (압축 후 File)
+/* ============== REVIEWS (댓글 + 사진 2장 + 답글) ============== */
+let attachedPhotos = [];  // 최대 2개 (File)
+let replyToCommentId = null;  // 답글 모드 (null이면 일반 댓글)
 
 function setupComments() {
   const input = document.getElementById('commentInput');
   const submit = document.getElementById('commentSubmit');
   const photoBtn = document.getElementById('reviewPhotoBtn');
   const photoInput = document.getElementById('reviewPhotoInput');
-  const preview = document.getElementById('reviewPhotoPreview');
-  const previewImg = document.getElementById('reviewPhotoPreviewImg');
-  const photoRemove = document.getElementById('reviewPhotoRemove');
+  const previews = document.getElementById('reviewPhotoPreviews');
+  const photoCount = document.getElementById('reviewPhotoCount');
+  const replyBanner = document.getElementById('reviewReplyBanner');
+  const replyBannerText = document.getElementById('reviewReplyBannerText');
+  const replyCancel = document.getElementById('reviewReplyCancel');
   
   if (!input || !submit) return;
   
   // 활성화 조건: 텍스트 OR 사진 있음
   const updateSubmit = () => {
     const hasText = input.value.trim().length > 0;
-    const hasPhoto = !!attachedPhotoFile;
+    const hasPhoto = attachedPhotos.length > 0;
     submit.disabled = !hasText && !hasPhoto;
   };
+  
+  // 사진 카운터 + 버튼 상태 갱신
+  const updatePhotoUI = () => {
+    if (photoCount) photoCount.textContent = `${attachedPhotos.length}/2`;
+    if (photoBtn) {
+      photoBtn.classList.toggle('attached', attachedPhotos.length > 0);
+    }
+    renderPhotoPreviews();
+    updateSubmit();
+  };
+  
+  // 미리보기 렌더링
+  function renderPhotoPreviews() {
+    if (!previews) return;
+    previews.innerHTML = attachedPhotos.map((file, idx) => {
+      const url = URL.createObjectURL(file);
+      return `
+        <div class="review-photo-preview" data-idx="${idx}">
+          <img src="${url}" alt="" />
+          <button class="review-photo-remove" data-idx="${idx}" aria-label="제거">
+            <span class="icon">close</span>
+          </button>
+        </div>
+      `;
+    }).join('');
+    // 제거 버튼
+    previews.querySelectorAll('.review-photo-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        attachedPhotos.splice(idx, 1);
+        updatePhotoUI();
+      });
+    });
+  }
   
   input.addEventListener('input', updateSubmit);
   input.addEventListener('keydown', (e) => { 
@@ -1323,58 +1379,72 @@ function setupComments() {
   
   // 사진 첨부 버튼
   if (photoBtn && photoInput) {
-    photoBtn.addEventListener('click', () => photoInput.click());
-    photoInput.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      try {
-        const compressed = await compressImage(file);
-        attachedPhotoFile = compressed;
-        // 미리보기
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          previewImg.src = ev.target.result;
-          preview.style.display = '';
-        };
-        reader.readAsDataURL(compressed);
-        photoBtn.classList.add('attached');
-        updateSubmit();
-      } catch (err) {
-        console.error('사진 압축 실패', err);
-        showToast('사진 처리 실패', 'warning');
+    photoBtn.addEventListener('click', () => {
+      if (attachedPhotos.length >= 2) {
+        showToast(t('photo.max'), 'warning');
+        return;
       }
+      photoInput.click();
     });
-  }
-  
-  // 사진 제거
-  if (photoRemove) {
-    photoRemove.addEventListener('click', () => {
-      attachedPhotoFile = null;
-      previewImg.src = '';
-      preview.style.display = 'none';
+    photoInput.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      
+      const remainingSlots = 2 - attachedPhotos.length;
+      const toAdd = files.slice(0, remainingSlots);
+      
+      for (const file of toAdd) {
+        try {
+          const compressed = await compressImage(file);
+          attachedPhotos.push(compressed);
+        } catch (err) {
+          console.error('사진 압축 실패', err);
+          showToast('사진 처리 실패', 'warning');
+        }
+      }
       photoInput.value = '';
-      photoBtn.classList.remove('attached');
-      updateSubmit();
+      updatePhotoUI();
     });
   }
   
-  // 등록 (텍스트 + 사진)
+  // 답글 취소
+  if (replyCancel) {
+    replyCancel.addEventListener('click', () => {
+      replyToCommentId = null;
+      replyBanner.style.display = 'none';
+      input.placeholder = t('detail.comments.placeholder');
+    });
+  }
+  
+  // 답글 모드 진입 (전역으로 호출 가능하게)
+  window.__startReply = (commentId, name) => {
+    replyToCommentId = commentId;
+    replyBanner.style.display = '';
+    replyBannerText.textContent = t('reply.banner').replace('{name}', name);
+    input.placeholder = t('reply.placeholder');
+    input.focus();
+    // 스크롤 - 입력창 보이게
+    document.getElementById('reviewCompose').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+  
+  // 등록 (텍스트 + 사진 + 답글)
   submit.addEventListener('click', () => {
     const text = input.value.trim();
-    if (!text && !attachedPhotoFile) return;
+    if (!text && attachedPhotos.length === 0) return;
     
     ensureUser(async () => {
       submit.disabled = true;
       submit.textContent = '...';
       
-      let photoUrl = null;
-      // 사진 첨부됐으면 먼저 Storage에 업로드
-      if (attachedPhotoFile) {
+      // 사진들 Storage에 업로드
+      const photoUrls = [];
+      for (let i = 0; i < attachedPhotos.length; i++) {
+        const file = attachedPhotos[i];
         try {
-          const fileName = `comment-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+          const fileName = `comment-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 8)}.jpg`;
           const filePath = `${state.currentCourse.id}/${fileName}`;
           const { error: upErr } = await sb.storage.from('course-photos')
-            .upload(filePath, attachedPhotoFile, { contentType: 'image/jpeg' });
+            .upload(filePath, file, { contentType: 'image/jpeg' });
           if (upErr) {
             console.error('사진 업로드', upErr);
             showToast('사진 업로드 실패', 'warning');
@@ -1383,24 +1453,28 @@ function setupComments() {
             return;
           }
           const { data: pub } = sb.storage.from('course-photos').getPublicUrl(filePath);
-          photoUrl = pub.publicUrl;
+          photoUrls.push(pub.publicUrl);
         } catch (e) {
           console.error('사진 처리', e);
         }
       }
       
-      const ok = await postComment(text || '(사진)', photoUrl);
+      const ok = await postComment(
+        text || '(사진)',
+        photoUrls[0] || null,
+        photoUrls[1] || null,
+        replyToCommentId
+      );
       
       submit.textContent = t('detail.comments.submit');
       if (ok) {
         renderReviews(); renderEngagement();
         input.value = '';
-        attachedPhotoFile = null;
-        if (preview) preview.style.display = 'none';
-        if (previewImg) previewImg.src = '';
-        if (photoInput) photoInput.value = '';
-        if (photoBtn) photoBtn.classList.remove('attached');
-        updateSubmit();
+        attachedPhotos = [];
+        replyToCommentId = null;
+        if (replyBanner) replyBanner.style.display = 'none';
+        input.placeholder = t('detail.comments.placeholder');
+        updatePhotoUI();
         showToast(t('toast.comment.ok'), 'check_circle');
       } else {
         submit.disabled = false;
@@ -1416,11 +1490,42 @@ function renderReviews() {
     list.innerHTML = `<div class="reviews-empty">${t('reviews.empty')}</div>`;
     return;
   }
-  list.innerHTML = state.comments.map(c => {
+  
+  // 부모 댓글과 답글 분리
+  const parents = state.comments.filter(c => !c.parent_id);
+  const repliesByParent = {};
+  state.comments.forEach(c => {
+    if (c.parent_id) {
+      if (!repliesByParent[c.parent_id]) repliesByParent[c.parent_id] = [];
+      repliesByParent[c.parent_id].push(c);
+    }
+  });
+  // 답글은 시간순 정렬 (오래된 게 위)
+  Object.values(repliesByParent).forEach(arr => arr.sort((a, b) => a.time - b.time));
+  
+  // 한 댓글(부모 또는 답글) 렌더 헬퍼
+  function renderOne(c, isReply = false) {
     const initial = (c.by[0] || '?').toUpperCase();
-    const hasPhoto = !!c.photo_url;
+    const photos = [c.photo_url, c.photo_url2].filter(Boolean);
+    const className = isReply ? 'review review-reply' : 'review';
+    
+    const photosHtml = photos.length ? `
+      <div class="review-photos">
+        ${photos.map(url => `<img class="review-photo" src="${escapeHtml(url)}" alt="" loading="lazy" data-url="${escapeHtml(url)}" />`).join('')}
+      </div>
+    ` : '';
+    
+    const replyBtnHtml = !isReply ? `
+      <div class="review-foot">
+        <button class="review-reply-btn" data-reply-id="${c.id}" data-reply-name="${escapeHtml(c.by)}">
+          <span class="icon">reply</span>
+          <span>${t('reply.btn')}</span>
+        </button>
+      </div>
+    ` : '';
+    
     return `
-      <div class="review" data-comment-id="${c.id}">
+      <div class="${className}" data-comment-id="${c.id}">
         <div class="review-avatar" style="background:${escapeHtml(c.color)}">${escapeHtml(initial)}</div>
         <div class="review-body">
           <div class="review-text-block">
@@ -1431,11 +1536,23 @@ function renderReviews() {
               ${c.mine ? `<button class="review-delete" data-comment-id="${c.id}" aria-label="Delete"><span class="icon">delete</span></button>` : ''}
             </div>
             <div class="review-text">${escapeHtml(c.text)}</div>
+            ${replyBtnHtml}
           </div>
-          ${hasPhoto ? `<img class="review-photo" src="${escapeHtml(c.photo_url)}" alt="" loading="lazy" data-url="${escapeHtml(c.photo_url)}" />` : ''}
+          ${photosHtml}
         </div>
       </div>
     `;
+  }
+  
+  // 부모 + 답글들 렌더
+  list.innerHTML = parents.map(parent => {
+    const replies = repliesByParent[parent.id] || [];
+    const repliesHtml = replies.length ? `
+      <div class="review-replies">
+        ${replies.map(r => renderOne(r, true)).join('')}
+      </div>
+    ` : '';
+    return renderOne(parent, false) + repliesHtml;
   }).join('');
   
   // 삭제 버튼
@@ -1456,6 +1573,15 @@ function renderReviews() {
   // 사진 클릭 → 라이트박스
   list.querySelectorAll('.review-photo').forEach(img => {
     img.addEventListener('click', () => openLightbox(img.dataset.url));
+  });
+  
+  // 답글 버튼
+  list.querySelectorAll('.review-reply-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = parseInt(btn.dataset.replyId, 10);
+      const name = btn.dataset.replyName;
+      if (window.__startReply) window.__startReply(id, name);
+    });
   });
 }
 
