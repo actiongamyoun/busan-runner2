@@ -23,6 +23,29 @@
         "ko": "옛 동해선 위 평탄한 해안길 · 일출 명소",
         "en": "Old railway-turned-path · Sunrise spot"
       },
+      "event": {
+        "active": true,
+        "title": {
+          "ko": "부산러너 첫 도전 캠페인",
+          "en": "First Challenge Campaign"
+        },
+        "period": {
+          "ko": "2026.06.01 ~ 06.30",
+          "en": "JUN 1 - 30, 2026"
+        },
+        "tag": {
+          "ko": "EVENT",
+          "en": "EVENT"
+        },
+        "prizes": {
+          "ko": "🥇 1등 카페 쿠폰 30,000원 · 🎁 추첨 4명 5,000원",
+          "en": "🥇 1st Place 30,000 KRW · 🎁 4 Random Winners 5,000 KRW"
+        },
+        "instructions": {
+          "ko": "1. 이 코스를 완주합니다.\n2. 자기 러닝 앱(Zepp, Strava 등) 기록 스크린샷을 찍어요.\n3. 코스 어디서든 인증샷도 한 장.\n4. 아래 사진과 댓글로 인증해주세요!",
+          "en": "1. Complete this course.\n2. Screenshot your tracking app (Zepp, Strava, etc).\n3. Take a photo somewhere on the course.\n4. Submit via photos and comments below!"
+        }
+      },
       "distance_km": 4.8,
       "duration_min": 30,
       "difficulty": {
